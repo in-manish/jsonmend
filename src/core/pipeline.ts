@@ -23,11 +23,14 @@ export interface FormatResult {
   diagnostics: Diagnostic[]
   path?: ParsePath
   error?: FormatError
+  /** Output is JSON Lines (one value per line) rather than a single JSON document. */
+  jsonLines: boolean
   /** `low` when any repair was a guess the user should verify. */
   confidence: 'high' | 'low'
   /** Payload candidates found in noisy input, and which one was used. */
   payloads: { list: Span[]; index: number }
-  stats: { inputChars: number; outputChars: number; durationMs: number }
+  /** `depth`: deepest container nesting in the output. */
+  stats: { inputChars: number; outputChars: number; durationMs: number; depth: number }
 }
 
 const now = () => performance.now()
@@ -47,11 +50,15 @@ export function format(input: string, options: Partial<FormatOptions> = {}): For
   const opts = resolveOptions(options)
   const reporter = new Reporter()
   let payloads: FormatResult['payloads'] = { list: [], index: 0 }
+  const shape = { depth: 0 }
 
-  const finish = (fields: Pick<FormatResult, 'ok' | 'output' | 'path' | 'error'>): FormatResult => {
+  const finish = (
+    fields: Pick<FormatResult, 'ok' | 'output' | 'path' | 'error'> & { jsonLines?: boolean },
+  ): FormatResult => {
     const diagnostics = reporter.finish()
     return {
       ...fields,
+      jsonLines: fields.jsonLines ?? false,
       diagnostics,
       confidence: countBySeverity(diagnostics).guess > 0 ? 'low' : 'high',
       payloads,
@@ -59,6 +66,7 @@ export function format(input: string, options: Partial<FormatOptions> = {}): For
         inputChars: input.length,
         outputChars: fields.output.length,
         durationMs: now() - started,
+        depth: shape.depth,
       },
     }
   }
@@ -146,10 +154,11 @@ export function format(input: string, options: Partial<FormatOptions> = {}): For
     }
   }
 
-  const output = serialize(root, opts, reporter)
+  const output = serialize(root, opts, reporter, shape)
 
+  const jsonLines = root.kind === 'array' && root.form === 'lines'
   try {
-    if (root.kind === 'array' && root.form === 'lines') {
+    if (jsonLines) {
       for (const line of output.split('\n')) JSON.parse(line)
     } else {
       JSON.parse(output)
@@ -158,5 +167,5 @@ export function format(input: string, options: Partial<FormatOptions> = {}): For
     return fail(`Internal error: generated output is not valid JSON (${(e as Error).message})`)
   }
 
-  return finish({ ok: true, output, path })
+  return finish({ ok: true, output, path, jsonLines })
 }

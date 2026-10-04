@@ -58,3 +58,11 @@ describe('report', () => {
     expect(r.payloads.index).toBe(1)
   })
 })
+
+describe('guess highlighting', () => {
+  it('marks strings whose end quote was guessed', () => {
+    const r = format('{"msg": "say "hi" now"}', { indent: 'none' })
+    const d = r.diagnostics.find((x) => x.code === 'structure.inner-quote')
+    expect(r.output.slice(d?.outputSpan?.start, d?.outputSpan?.end)).toBe('"say \\"hi\\" now"')
+  })
+})

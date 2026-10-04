@@ -1,5 +1,177 @@
 @import "tailwindcss";
 
+/* Light palette; dark overrides apply for the system setting and the explicit toggle. */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --fg: #1d2430;
+  --muted: #5d6675;
+  --border: #dfe3ea;
+  --accent: #2563eb;
+  --accent-fg: #ffffff;
+  --info: #2563eb;
+  --warn: #b45309;
+  --guess: #c2410c;
+  --error: #b91c1c;
+  --mark-info: rgb(37 99 235 / 0.12);
+  --mark-warn: rgb(180 83 9 / 0.16);
+  --mark-guess: rgb(234 88 12 / 0.28);
+  --tok-string: #0a7b3e;
+  --tok-number: #1d4ed8;
+  --tok-bool: #9333ea;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1218;
+  --panel: #161b22;
+  --fg: #e3e8ef;
+  --muted: #98a2b3;
+  --border: #2b3240;
+  --accent: #5b8def;
+  --accent-fg: #0b0e13;
+  --info: #7aa2f7;
+  --warn: #f0a35b;
+  --guess: #ff8a4c;
+  --error: #f87171;
+  --mark-info: rgb(122 162 247 / 0.18);
+  --mark-warn: rgb(240 163 91 / 0.2);
+  --mark-guess: rgb(255 138 76 / 0.32);
+  --tok-string: #7ee2a8;
+  --tok-number: #8fb3ff;
+  --tok-bool: #d2a8ff;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+}
+
+@layer components {
+  .btn {
+    @apply rounded-md border border-[var(--border)] bg-[var(--panel)] px-2.5 py-1 text-sm hover:border-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn[aria-pressed="true"] {
+    @apply border-[var(--accent)] text-[var(--accent)];
+  }
+  .btn-primary {
+    @apply border-[var(--accent)] bg-[var(--accent)] font-medium text-[var(--accent-fg)];
+  }
+  .chip {
+    @apply rounded-full border border-[var(--border)] px-2.5 py-0.5 text-xs hover:border-[var(--accent)] disabled:opacity-40;
+  }
+  .input-sm {
+    @apply rounded border border-[var(--border)] bg-[var(--panel)] px-1.5 py-0.5 text-sm;
+  }
+  .pane-title {
+    @apply px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--muted)];
+  }
+  .segmented {
+    @apply inline-flex overflow-hidden rounded-md border border-[var(--border)] text-xs;
+  }
+  .segmented button {
+    @apply px-2 py-0.5;
+  }
+  .segmented button[aria-pressed="true"] {
+    @apply bg-[var(--accent)] text-[var(--accent-fg)];
+  }
+  .banner {
+    @apply mx-2 mb-1 rounded-md border px-3 py-1.5 text-sm;
+  }
+  .banner-guess {
+    @apply border-[var(--guess)] text-[var(--guess)];
+  }
+  .banner-error {
+    @apply border-[var(--error)] text-[var(--error)];
+  }
+  .report-row {
+    @apply flex w-full items-baseline gap-2 rounded px-1.5 py-0.5 text-left hover:bg-[var(--bg)];
+  }
+  .sev {
+    @apply w-11 shrink-0 text-[11px] font-semibold uppercase;
+  }
+  .sev-info {
+    color: var(--info);
+  }
+  .sev-warn {
+    color: var(--warn);
+  }
+  .sev-guess {
+    color: var(--guess);
+  }
+  .sev-error {
+    color: var(--error);
+  }
+  .toast {
+    @apply fixed bottom-10 left-1/2 z-30 -translate-x-1/2 rounded-md bg-[var(--fg)] px-3 py-1.5 text-sm text-[var(--bg)] shadow-lg;
+    animation: toast 2.5s ease forwards;
+  }
+  .tree ul {
+    @apply ml-4 border-l border-[var(--border)] pl-1;
+  }
+  .tree-row {
+    @apply flex items-baseline gap-1 whitespace-nowrap;
+  }
+  .tree-toggle {
+    @apply inline-block w-4 text-center text-[var(--muted)];
+  }
+  .tree-key {
+    @apply rounded px-0.5 hover:bg-[var(--mark-info)];
+  }
+  .tree-sep,
+  .tree-summary {
+    color: var(--muted);
+  }
+  .tok-string {
+    color: var(--tok-string);
+  }
+  .tok-number {
+    color: var(--tok-number);
+  }
+  .tok-bool,
+  .tok-null {
+    color: var(--tok-bool);
+  }
+}
+
+@keyframes toast {
+  0%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Highlighted repairs and conversions in the output editor. */
+.cm-repair-info {
+  background: var(--mark-info);
+}
+.cm-repair-warn {
+  background: var(--mark-warn);
+}
+.cm-repair-guess {
+  background: var(--mark-guess);
+  outline: 1px dashed var(--guess);
+}
+.cm-repair-error {
+  background: var(--mark-guess);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation-duration: 0.01s;
+    animation-delay: 2.5s;
+  }
 }

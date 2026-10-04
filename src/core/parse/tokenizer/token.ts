@@ -23,6 +23,8 @@ export interface Token {
   spaceBefore: boolean
   /** Strings: false when the input ended before the closing quote. */
   closed?: boolean
+  /** Index of a guess diagnostic about this token, so its output can be highlighted. */
+  mark?: number
   /** Strings with a `b` prefix. */
   bytes?: Uint8Array
   /** Numbers with a `j` suffix (Python imaginary literal). */

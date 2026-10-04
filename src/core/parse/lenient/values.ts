@@ -42,7 +42,7 @@ export abstract class ValueParser extends ParserBase {
   }
 
   protected stringNode(tok: Token): Node | undefined {
-    let mark: number | undefined
+    let mark = tok.mark
     if (!tok.closed) {
       if (this.opts.truncatedString === 'drop') {
         this.report(

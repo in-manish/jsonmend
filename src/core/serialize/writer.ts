@@ -24,7 +24,12 @@ type Task =
  * order, duplicate keys and `__proto__` keys are handled exactly. Uses an explicit work stack,
  * so deep nesting can't overflow the call stack. Fills in `outputSpan` on marked diagnostics.
  */
-export function serialize(root: JsonNode, opts: FormatOptions, reporter = new Reporter()): string {
+export function serialize(
+  root: JsonNode,
+  opts: FormatOptions,
+  reporter = new Reporter(),
+  stats?: { depth: number },
+): string {
   const out: string[] = []
   let pos = 0
   const write = (s: string) => {
@@ -77,6 +82,9 @@ export function serialize(root: JsonNode, opts: FormatOptions, reporter = new Re
         continue
       }
       const { node, depth } = task
+      if (stats && (node.kind === 'array' || node.kind === 'object') && depth + 1 > stats.depth) {
+        stats.depth = depth + 1
+      }
       if (node.mark !== undefined) tasks.push({ endMark: node.mark, start: pos })
       switch (node.kind) {
         case 'null':

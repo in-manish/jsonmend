@@ -28,6 +28,7 @@ export function scanString(
   let segment = i
   let closed = false
   let guessed = false
+  let mark: number | undefined
   const flush = (upTo: number) => {
     value += text.slice(segment, upTo)
   }
@@ -76,7 +77,7 @@ export function scanString(
       const lineStart = ch === '\r' && text[i + 1] === '\n' ? i + 2 : i + 1
       const lineEnd = text.indexOf('\n', lineStart)
       if (NEW_ENTRY_RE.test(text.slice(lineStart, lineEnd === -1 ? end : lineEnd))) {
-        s.reporter.add({
+        mark = s.reporter.add({
           severity: 'guess',
           category: 'structure',
           code: 'structure.unclosed-string-eol',
@@ -95,7 +96,7 @@ export function scanString(
   if (!closed) flush(Math.min(i, end))
 
   if (guessed) {
-    s.reporter.add({
+    mark = s.reporter.add({
       severity: 'guess',
       category: 'structure',
       code: 'structure.inner-quote',
@@ -112,6 +113,7 @@ export function scanString(
     spaceBefore,
     closed,
   }
+  if (mark !== undefined && mark >= 0) token.mark = mark
   if (isBytes) token.bytes = toBytes(value)
   return token
 }
