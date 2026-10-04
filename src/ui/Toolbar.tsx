@@ -10,21 +10,11 @@ const NEXT_THEME: Record<Theme, Theme> = { system: 'light', light: 'dark', dark:
 export function Toolbar() {
   const s = useAppStore()
   const fileInput = useRef<HTMLInputElement>(null)
-  const lastIndent = useRef<typeof s.options.indent>(2)
   const output = s.result?.ok ? s.result.output : ''
-  const minified = s.options.indent === 'none'
 
   const copyOutput = async () => {
     if (!output) return
     s.notify((await copyText(output)) ? 'Copied output' : 'Clipboard is not available')
-  }
-
-  const toggleMinify = () => {
-    if (minified) s.setOptions({ indent: lastIndent.current === 'none' ? 2 : lastIndent.current })
-    else {
-      lastIndent.current = s.options.indent
-      s.setOptions({ indent: 'none' })
-    }
   }
 
   const share = async () => {
@@ -43,9 +33,6 @@ export function Toolbar() {
         title="Format (Ctrl/Cmd+Enter)"
       >
         {s.running ? 'Formatting...' : 'Format'}
-      </button>
-      <button type="button" className="btn" aria-pressed={minified} onClick={toggleMinify}>
-        Minify
       </button>
       <button
         type="button"

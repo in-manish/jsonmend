@@ -13,6 +13,8 @@ export const AUTO_RUN_LIMIT = 2 * 1024 * 1024
 interface AppState {
   input: string
   options: FormatOptions
+  /** Indent to return to when switching from minified back to pretty. */
+  prettyIndent: Exclude<FormatOptions['indent'], 'none'>
   result?: FormatResult
   /** The input text `result` was computed from (spans are only valid against it). */
   resultInput?: string
@@ -50,6 +52,7 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       input: '',
       options: { ...DEFAULT_OPTIONS },
+      prettyIndent: 2,
       running: false,
       view: 'code',
       theme: 'system',
@@ -59,7 +62,11 @@ export const useAppStore = create<AppState>()(
       runRequest: 0,
 
       setInput: (input) => set({ input }),
-      setOptions: (patch) => set((s) => ({ options: { ...s.options, ...patch } })),
+      setOptions: (patch) =>
+        set((s) => ({
+          options: { ...s.options, ...patch },
+          prettyIndent: patch.indent && patch.indent !== 'none' ? patch.indent : s.prettyIndent,
+        })),
       resetOptions: () => set({ options: { ...DEFAULT_OPTIONS } }),
       setResult: (result, input) => set({ result, resultInput: input, selected: undefined }),
       setRunning: (running) => set({ running }),

@@ -8,6 +8,7 @@ import { EmptyState } from './EmptyState'
 import { marksField, outputMarks, setMarks } from './editor/marks'
 import { baseTheme } from './editor/theme'
 import { editors, reveal } from './editor/views'
+import { LayoutSwitch } from './LayoutSwitch'
 import { TreeView } from './tree/TreeView'
 
 export function OutputPane({ dark }: { dark: boolean }) {
@@ -16,6 +17,7 @@ export function OutputPane({ dark }: { dark: boolean }) {
   const setView = useAppStore((s) => s.setView)
   const selected = useAppStore((s) => s.selected)
   const output = result?.ok ? result.output : ''
+  const minified = useAppStore((s) => s.options.indent === 'none')
 
   const extensions = useMemo(
     () => [
@@ -23,8 +25,10 @@ export function OutputPane({ dark }: { dark: boolean }) {
       marksField,
       baseTheme,
       EditorView.contentAttributes.of({ 'aria-label': 'Formatted JSON output' }),
+      // Minified output is one long line; wrap it so it reads top to bottom.
+      ...(minified ? [EditorView.lineWrapping] : []),
     ],
-    [],
+    [minified],
   )
 
   // Value changes are applied by the CodeMirror component; marks follow on the next frame.
@@ -47,14 +51,17 @@ export function OutputPane({ dark }: { dark: boolean }) {
     <section aria-label="Output" className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="flex items-center justify-between gap-2 pr-2">
         <h2 className="pane-title">Output</h2>
-        <fieldset className="segmented" aria-label="Output view">
-          <button type="button" aria-pressed={view === 'code'} onClick={() => setView('code')}>
-            Code
-          </button>
-          <button type="button" aria-pressed={view === 'tree'} onClick={() => setView('tree')}>
-            Tree
-          </button>
-        </fieldset>
+        <div className="flex items-center gap-2">
+          <LayoutSwitch />
+          <fieldset className="segmented" aria-label="Output view">
+            <button type="button" aria-pressed={view === 'code'} onClick={() => setView('code')}>
+              Code
+            </button>
+            <button type="button" aria-pressed={view === 'tree'} onClick={() => setView('tree')}>
+              Tree
+            </button>
+          </fieldset>
+        </div>
       </div>
 
       {result?.ok && guesses > 0 && (

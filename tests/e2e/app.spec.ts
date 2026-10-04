@@ -124,3 +124,14 @@ test('stays responsive while formatting a 5 MB upload', async ({ page }) => {
   await page.getByRole('button', { name: 'Format', exact: true }).click()
   await expect(page.getByText(/Out [\d,]+ chars/)).toBeVisible({ timeout: 20_000 })
 })
+
+test('switches between minified and pretty output, keeping the chosen indent', async ({ page }) => {
+  await setInput(page, '{"a": [1, 2]}')
+  await page.getByRole('button', { name: 'Options' }).click()
+  await page.getByLabel('Indent').selectOption({ label: '4 spaces' })
+  await page.getByRole('button', { name: 'Close', exact: true }).click()
+  await page.getByRole('button', { name: 'Minified' }).click()
+  await expect.poll(() => outputText(page)).toBe('{"a":[1,2]}')
+  await page.getByRole('button', { name: 'Pretty' }).click()
+  await expect.poll(() => outputText(page)).toBe('{\n    "a": [\n        1,\n        2\n    ]\n}')
+})
