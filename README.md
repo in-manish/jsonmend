@@ -31,10 +31,17 @@ React 19, TypeScript, Vite, Tailwind CSS 4, Vitest, Biome.
 ## Status
 
 - [x] Phase 0: scaffold
-- [ ] Phase 1: core happy path
+- [x] Phase 1: core happy path
 - [ ] Phase 2: lenient parser
 - [ ] Phase 3: Python type registry
 - [ ] Phase 4: structural repair
 - [ ] Phase 5: UI
 - [ ] Phase 6: polish
 - [ ] Phase 7: release
+
+## Tests
+
+- `tests/core/*.test.ts`: unit, property-based (fast-check) and performance tests
+- `tests/fixtures/`: `name.in` is formatted and compared byte for byte with `name.out.json`.
+  Optional `name.options.json` sets format options; optional `name.codes.json` lists the exact
+  diagnostic codes expected. Biome ignores this folder so expected outputs stay untouched.
