@@ -3,6 +3,7 @@ import type { Theme } from '../store/useAppStore'
 import { useAppStore } from '../store/useAppStore'
 import { copyText, download, pasteText, readTextFile } from './lib/files'
 import { encodeShare, SHARE_LIMIT } from './lib/share'
+import { OrientationSwitch } from './OrientationSwitch'
 import { SAMPLES } from './samples'
 
 const NEXT_THEME: Record<Theme, Theme> = { system: 'light', light: 'dark', dark: 'system' }
@@ -28,10 +29,13 @@ export function Toolbar() {
       <h1 className="mr-2 font-semibold tracking-tight">jsonmend</h1>
       <button
         type="button"
-        className="btn btn-primary"
+        className="btn btn-primary inline-flex items-center gap-1.5"
         onClick={s.requestRun}
         title="Format (Ctrl/Cmd+Enter)"
       >
+        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true">
+          <path d="M4 2.5v11a.5.5 0 0 0 .76.43l9-5.5a.5.5 0 0 0 0-.86l-9-5.5A.5.5 0 0 0 4 2.5Z" />
+        </svg>
         {s.running ? 'Formatting...' : 'Format'}
       </button>
       <button
@@ -112,6 +116,7 @@ export function Toolbar() {
       >
         Share
       </button>
+      <OrientationSwitch />
       <button
         type="button"
         className="btn"

@@ -6,6 +6,8 @@ import { safeStorage } from './storage'
 
 export type Theme = 'system' | 'light' | 'dark'
 export type View = 'code' | 'tree'
+/** `vertical`: input on top, output below. `horizontal`: input left, output right. */
+export type Orientation = 'vertical' | 'horizontal'
 
 /** Inputs above this size don't auto-format on every keystroke. */
 export const AUTO_RUN_LIMIT = 2 * 1024 * 1024
@@ -21,6 +23,7 @@ interface AppState {
   running: boolean
   view: View
   theme: Theme
+  orientation: Orientation
   reportOpen: boolean
   optionsOpen: boolean
   /** Cursor position in the input editor, 1-based. */
@@ -39,6 +42,7 @@ interface AppState {
   setRunning(running: boolean): void
   setView(view: View): void
   setTheme(theme: Theme): void
+  setOrientation(orientation: Orientation): void
   setReportOpen(open: boolean): void
   setOptionsOpen(open: boolean): void
   setCursor(line: number, column: number): void
@@ -56,6 +60,7 @@ export const useAppStore = create<AppState>()(
       running: false,
       view: 'code',
       theme: 'system',
+      orientation: 'vertical',
       reportOpen: true,
       optionsOpen: false,
       cursor: { line: 1, column: 1 },
@@ -72,6 +77,7 @@ export const useAppStore = create<AppState>()(
       setRunning: (running) => set({ running }),
       setView: (view) => set({ view }),
       setTheme: (theme) => set({ theme }),
+      setOrientation: (orientation) => set({ orientation }),
       setReportOpen: (reportOpen) => set({ reportOpen }),
       setOptionsOpen: (optionsOpen) => set({ optionsOpen }),
       setCursor: (line, column) => set({ cursor: { line, column } }),
@@ -87,6 +93,7 @@ export const useAppStore = create<AppState>()(
       partialize: (s) => ({
         options: s.options,
         theme: s.theme,
+        orientation: s.orientation,
         view: s.view,
         reportOpen: s.reportOpen,
       }),

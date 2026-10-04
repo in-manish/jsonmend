@@ -147,3 +147,24 @@ test('hovering an object line in the output offers a copy button', async ({ page
   const copied = await page.evaluate(() => navigator.clipboard.readText())
   expect(JSON.parse(copied)).toEqual({ b: [1, 2] })
 })
+
+test('stacks input above output by default and can switch to side by side', async ({ page }) => {
+  const box = async (name: string) => {
+    const b = await page.locator(`section[aria-label="${name}"]`).boundingBox()
+    if (!b) throw new Error(`${name} pane is not visible`)
+    return b
+  }
+  let [a, b] = [await box('Input'), await box('Output')]
+  expect(b.y).toBeGreaterThan(a.y + a.height - 1)
+  expect(Math.abs(a.x - b.x)).toBeLessThan(2)
+
+  await page.getByRole('button', { name: 'Input on left, output on right' }).click()
+  ;[a, b] = [await box('Input'), await box('Output')]
+  expect(b.x).toBeGreaterThan(a.x + a.width - 1)
+  expect(Math.abs(a.y - b.y)).toBeLessThan(2)
+
+  await page.reload()
+  await expect(
+    page.getByRole('button', { name: 'Input on left, output on right' }),
+  ).toHaveAttribute('aria-pressed', 'true')
+})

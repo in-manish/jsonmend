@@ -17,6 +17,7 @@ export default function App() {
   const dark = useTheme()
   useFormatter()
   const [split, setSplit] = useState(50)
+  const horizontal = useAppStore((s) => s.orientation) === 'horizontal'
 
   // Input from a share link (on load, or pasted into an open tab), then drop it from the URL.
   useEffect(() => {
@@ -52,13 +53,13 @@ export default function App() {
     <div className="flex h-dvh flex-col bg-[var(--bg)] text-[var(--fg)]">
       <Toolbar />
       <main
-        className="flex min-h-0 flex-1 flex-col md:flex-row"
+        className={`flex min-h-0 flex-1 flex-col ${horizontal ? 'md:flex-row' : ''}`}
         style={{ '--split': `${split}%` } as CSSProperties}
       >
         <div className="flex min-h-0 flex-1 md:flex-none md:basis-[var(--split)]">
           <InputPane dark={dark} />
         </div>
-        <Splitter onResize={setSplit} />
+        <Splitter horizontal={horizontal} onResize={setSplit} />
         <div className="flex min-h-0 flex-1 border-t border-[var(--border)] md:border-t-0">
           <OutputPane dark={dark} />
         </div>
