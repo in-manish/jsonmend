@@ -1,25 +1,57 @@
 # jsonmend
 
-Browser-only tool that turns anything that looks like data (Python `dict` reprs, JS object
-literals, broken or truncated JSON, log lines with payloads) into valid, pretty-printed JSON,
-plus a report of every change it made. Nothing leaves the browser.
+Paste anything that looks like data and get valid, pretty-printed JSON back, plus a report of
+every change that was made. Runs entirely in the browser: nothing is uploaded, and the deployed
+page's Content Security Policy blocks all network requests.
 
-Full spec and roadmap: [docs/PLAN.md](docs/PLAN.md).
+It accepts:
 
-## Stack
+- valid JSON (kept exactly: big integers, number spelling, key order)
+- Python `dict` / `list` reprs, including `datetime`, `Decimal`, `UUID`, sets, tuples, bytes,
+  `Enum`, numpy, pandas, dataclass and `<object at 0x...>` reprs
+- JS object literals: unquoted keys, single quotes, trailing commas, comments
+- broken or truncated JSON: missing brackets, quotes, commas or colons
+- data surrounded by noise: Markdown fences, log lines, `data = {...};`, `print(...)`
 
-React 19, TypeScript, Vite, Tailwind CSS 4, Vitest, Biome.
+The output is always checked with `JSON.parse` before it is shown. Repairs that are guesses are
+highlighted and flagged so you can verify them.
+
+See [docs/SUPPORTED-TYPES.md](docs/SUPPORTED-TYPES.md) for everything it understands, and
+[docs/PLAN.md](docs/PLAN.md) for the original spec.
+
+## Getting started
+
+```sh
+npm install
+npm run dev          # http://localhost:5173
+```
 
 ## Scripts
 
 | Command | What it does |
 |---|---|
 | `npm run dev` | Start the dev server |
-| `npm run lint` | Biome lint + format check |
-| `npm run format` | Apply Biome fixes |
+| `npm run build` | Typecheck and build the static site to `dist/` |
+| `npm run preview` | Serve `dist/` with the production security headers |
+| `npm run lint` | Biome lint + format check (`npm run format` applies fixes) |
 | `npm run typecheck` | `tsc -b` |
-| `npm test` | Run Vitest once |
-| `npm run build` | Typecheck and build to `dist/` |
+| `npm test` | Unit, fixture, property, fuzz, round-trip and differential tests (Vitest) |
+| `npm run test:e2e` | End-to-end tests in Chromium, desktop and mobile (Playwright) |
+
+The first `npm run test:e2e` needs `npx playwright install chromium`.
+
+## Using the core without the UI
+
+`src/core` has no DOM or React dependencies:
+
+```ts
+import { format } from './src/core'
+
+const result = format("{'when': datetime.date(2024, 1, 5), 'ok': True}", { indent: 2 })
+result.ok          // true
+result.output      // '{\n  "when": "2024-01-05",\n  "ok": true\n}'
+result.diagnostics // every change: severity, message, input span, output span
+```
 
 ## Layout
 
@@ -34,10 +66,28 @@ src/core/                 pure TS pipeline, no DOM/React imports
   pyTypes/                one handler per type (datetime/, decimal, uuid, bytes, set, enum, ...)
   serialize/              JSON writer (indent, sort, duplicate keys, escaping, output spans)
   ast.ts options.ts report.ts
-src/worker, src/ui, src/store   browser app
+src/worker/               Web Worker running the core (Comlink), with cancellation
+src/store/                Zustand store; options and theme persist, input never does
+src/ui/                   React app: editors, report, options, tree view, toolbar
 tests/core                unit, property, fuzz, round-trip and differential tests
-tests/fixtures/<group>    input/expected-output pairs
+tests/fixtures/<group>    input / expected output pairs (json, lenient, types, repair)
+tests/e2e                 Playwright tests
 ```
+
+## Tests
+
+- `tests/fixtures/<group>/`: `name.in` is formatted and compared byte for byte with
+  `name.out.json`. Optional `name.options.json` sets format options; optional `name.codes.json`
+  lists the exact diagnostic codes expected. Biome ignores this folder so expected outputs stay
+  untouched.
+- Property tests (fast-check) check that any JSON value survives formatting unchanged, that
+  formatting is idempotent, and that Python reprs and JS literals of any JSON value convert back
+  to the same value. Fuzz tests damage valid JSON at random and require valid output or a clean
+  error, never a crash.
+
+## Deploying
+
+Static hosting only. See [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Status
 
@@ -46,13 +96,8 @@ tests/fixtures/<group>    input/expected-output pairs
 - [x] Phase 2: lenient parser
 - [x] Phase 3: Python type registry
 - [x] Phase 4: structural repair
-- [ ] Phase 5: UI
-- [ ] Phase 6: polish
-- [ ] Phase 7: release
+- [x] Phase 5: UI
+- [x] Phase 6: polish
+- [x] Phase 7: release prep (deploy config, docs, changelog). Not deployed yet.
 
-## Tests
-
-- `tests/core/*.test.ts`: unit, property-based (fast-check) and performance tests
-- `tests/fixtures/`: `name.in` is formatted and compared byte for byte with `name.out.json`.
-  Optional `name.options.json` sets format options; optional `name.codes.json` lists the exact
-  diagnostic codes expected. Biome ignores this folder so expected outputs stay untouched.
+Not in v1: a Pyodide "exact mode" for Python syntax the parser can't handle.
