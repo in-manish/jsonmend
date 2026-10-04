@@ -23,18 +23,29 @@ React 19, TypeScript, Vite, Tailwind CSS 4, Vitest, Biome.
 
 ## Layout
 
-- `src/core`: pure TS formatting pipeline (no DOM/React imports)
-- `src/worker`: Web Worker wrapper around the core
-- `src/ui`, `src/store`: React UI and Zustand store
-- `tests/core`, `tests/fixtures`, `tests/e2e`: unit, fixture and E2E tests
+```
+src/core/                 pure TS pipeline, no DOM/React imports
+  pipeline.ts             orchestrates the stages, returns FormatResult
+  extract.ts              finds the payload inside noisy text (fences, log prefixes, wrappers)
+  parse/strict.ts         lossless RFC 8259 fast path
+  parse/tokenizer/        lenient tokenizer (strings, numbers, escapes, reprs)
+  parse/lenient/          lenient parser with bracket-stack repair
+  transform.ts            Python/JS types -> JSON values, via the registry
+  pyTypes/                one handler per type (datetime/, decimal, uuid, bytes, set, enum, ...)
+  serialize/              JSON writer (indent, sort, duplicate keys, escaping, output spans)
+  ast.ts options.ts report.ts
+src/worker, src/ui, src/store   browser app
+tests/core                unit, property, fuzz, round-trip and differential tests
+tests/fixtures/<group>    input/expected-output pairs
+```
 
 ## Status
 
 - [x] Phase 0: scaffold
 - [x] Phase 1: core happy path
-- [ ] Phase 2: lenient parser
-- [ ] Phase 3: Python type registry
-- [ ] Phase 4: structural repair
+- [x] Phase 2: lenient parser
+- [x] Phase 3: Python type registry
+- [x] Phase 4: structural repair
 - [ ] Phase 5: UI
 - [ ] Phase 6: polish
 - [ ] Phase 7: release

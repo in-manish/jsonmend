@@ -1,0 +1,6 @@
+{'id': 42,
+ 'created_at': datetime.datetime(2024, 3, 9, 8, 15, 0, 250000, tzinfo=datetime.timezone.utc),
+ 'amount': Decimal('199.90'),
+ 'status': <Status.PAID: 'paid'>,
+ 'meta': {'tags': {'vip'}, 'ref': UUID('0f8fad5b-d9cb-469f-a165-70867728950e')},
+ 'raw': b'ok'}

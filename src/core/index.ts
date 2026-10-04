@@ -1,6 +1,8 @@
-export type { Node, Span } from './ast'
-export { normalize } from './normalize'
+export type { JsonNode, Node, Span } from './ast'
+export { extract } from './extract'
 export { DEFAULT_OPTIONS, type FormatOptions, resolveOptions } from './options'
+export { parseLenient } from './parse/lenient'
+export { ParseError, parseStrictJson } from './parse/strict'
 export { type FormatError, type FormatResult, format, type ParsePath } from './pipeline'
 export {
   type Category,
@@ -9,7 +11,8 @@ export {
   type Diagnostic,
   type Position,
   positionAt,
+  Reporter,
   type Severity,
+  summarize,
 } from './report'
-export { quote, serialize } from './serialize'
-export { ParseError, parseStrictJson } from './strictParse'
+export { quote, serialize, toCompactJson } from './serialize'

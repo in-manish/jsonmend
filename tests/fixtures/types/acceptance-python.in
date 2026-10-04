@@ -1,0 +1,1 @@
+{'created': datetime.datetime(2024, 1, 5, 13, 30), 'id': UUID('12345678-1234-5678-1234-567812345678'), 'tags': {'a','b'}, 'price': Decimal('9.99'), 'ok': True, 'x': None}

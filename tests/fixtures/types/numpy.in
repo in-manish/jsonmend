@@ -1,0 +1,1 @@
+{'a': np.int64(5), 'b': np.float32(1.5), 'c': array([1, 2, 3]), 'd': array([[1, 2], [3, 4]], dtype=int64)}

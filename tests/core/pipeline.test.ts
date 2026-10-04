@@ -16,18 +16,17 @@ describe('format', () => {
     expect(r).toMatchObject({ ok: false, output: '', error: { message: 'Input is empty' } })
   })
 
-  it('reports the line and column of the first error', () => {
-    const r = format('{\n  "a": 1,\n  b: 2\n}')
+  it('reports the position of the first error when nothing can be recovered', () => {
+    const r = format('\n  }')
     expect(r.ok).toBe(false)
     expect(r.output).toBe('')
-    expect(r.error?.position).toEqual({ offset: 14, line: 3, column: 3 })
+    expect(r.error?.position).toMatchObject({ line: 2, column: 3 })
     expect(countBySeverity(r.diagnostics).error).toBe(1)
   })
 
-  it('reports the original error when normalizing does not help', () => {
-    const r = format('{\u201ca\u201d: 1,}')
-    expect(r.ok).toBe(false)
-    expect(r.error?.message).toBe('Expected a double-quoted key but found "\u201c"')
+  it('repairs instead of failing when the input is close to JSON', () => {
+    const r = format('{\n  "a": 1,\n  b: 2\n}', { indent: 'none' })
+    expect(r).toMatchObject({ ok: true, output: '{"a":1,"b":2}', path: 'lenient' })
   })
 
   it('does not rewrite characters inside strings of valid JSON', () => {
