@@ -5,6 +5,7 @@ import { useEffect, useMemo } from 'react'
 import { countBySeverity } from '../core/report'
 import { useAppStore } from '../store/useAppStore'
 import { EmptyState } from './EmptyState'
+import { copyValueButton } from './editor/copyValue'
 import { marksField, outputMarks, setMarks } from './editor/marks'
 import { baseTheme } from './editor/theme'
 import { editors, reveal } from './editor/views'
@@ -23,6 +24,7 @@ export function OutputPane({ dark }: { dark: boolean }) {
     () => [
       json(),
       marksField,
+      copyValueButton,
       baseTheme,
       EditorView.contentAttributes.of({ 'aria-label': 'Formatted JSON output' }),
       // Minified output is one long line; wrap it so it reads top to bottom.

@@ -149,6 +149,37 @@ body {
   }
 }
 
+.cm-editor {
+  position: relative;
+}
+.cm-copy-value {
+  position: absolute;
+  right: 18px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 5px;
+  color: var(--muted, inherit);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.cm-copy-value[hidden] {
+  display: none;
+}
+.cm-copy-value:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.cm-copy-value[data-state="copied"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.cm-copy-value[data-state="failed"] {
+  color: var(--guess);
+}
+
 /* Highlighted repairs and conversions in the output editor. */
 .cm-repair-info {
   background: var(--mark-info);

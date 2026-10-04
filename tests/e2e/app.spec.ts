@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { outputText, setInput } from './helpers'
+import { output, outputText, setInput } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -134,4 +134,16 @@ test('switches between minified and pretty output, keeping the chosen indent', a
   await expect.poll(() => outputText(page)).toBe('{"a":[1,2]}')
   await page.getByRole('button', { name: 'Pretty' }).click()
   await expect.poll(() => outputText(page)).toBe('{\n    "a": [\n        1,\n        2\n    ]\n}')
+})
+
+test('hovering an object line in the output offers a copy button', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await setInput(page, '{"a": {"b": [1, 2]}, "c": 3}')
+  await expect.poll(() => outputText(page)).toContain('"b"')
+  await output(page).locator('.cm-line', { hasText: '"a": {' }).hover()
+  const button = page.getByRole('button', { name: 'Copy this value' })
+  await expect(button).toBeVisible()
+  await button.click()
+  const copied = await page.evaluate(() => navigator.clipboard.readText())
+  expect(JSON.parse(copied)).toEqual({ b: [1, 2] })
 })
