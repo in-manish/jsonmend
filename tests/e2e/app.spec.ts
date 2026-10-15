@@ -168,3 +168,17 @@ test('stacks input above output by default and can switch to side by side', asyn
     page.getByRole('button', { name: 'Input on left, output on right' }),
   ).toHaveAttribute('aria-pressed', 'true')
 })
+
+test('the output is editable and the copy-all icons copy the whole pane', async ({ page }) => {
+  await setInput(page, '[1,2]')
+  await expect.poll(() => outputText(page)).toBe('[\n  1,\n  2\n]')
+  await output(page).click()
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.keyboard.insertText('{"edited": true}')
+  expect(await outputText(page)).toBe('{"edited": true}')
+
+  await page.getByRole('button', { name: 'Copy all output' }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('{"edited": true}')
+  await page.getByRole('button', { name: 'Copy all input' }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('[1,2]')
+})

@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import type { Theme } from '../store/useAppStore'
 import { useAppStore } from '../store/useAppStore'
+import { editors } from './editor/views'
 import { copyText, download, pasteText, readTextFile } from './lib/files'
 import { encodeShare, SHARE_LIMIT } from './lib/share'
 import { OrientationSwitch } from './OrientationSwitch'
@@ -14,8 +15,9 @@ export function Toolbar() {
   const output = s.result?.ok ? s.result.output : ''
 
   const copyOutput = async () => {
-    if (!output) return
-    s.notify((await copyText(output)) ? 'Copied output' : 'Clipboard is not available')
+    const text = (s.view === 'code' && editors.output?.state.doc.toString()) || output
+    if (!text) return
+    s.notify((await copyText(text)) ? 'Copied output' : 'Clipboard is not available')
   }
 
   const share = async () => {

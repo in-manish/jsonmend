@@ -152,6 +152,23 @@ body {
 .cm-editor {
   position: relative;
 }
+.copy-all {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 5px;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+.copy-all:hover,
+.copy-all[data-state="copied"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.copy-all[data-state="failed"] {
+  color: var(--guess);
+}
+
 .cm-copy-value {
   position: absolute;
   right: 18px;

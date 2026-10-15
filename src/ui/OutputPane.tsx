@@ -4,6 +4,7 @@ import CodeMirror from '@uiw/react-codemirror'
 import { useEffect, useMemo } from 'react'
 import { countBySeverity } from '../core/report'
 import { useAppStore } from '../store/useAppStore'
+import { CopyAllButton } from './CopyAllButton'
 import { EmptyState } from './EmptyState'
 import { copyValueButton } from './editor/copyValue'
 import { marksField, outputMarks, setMarks } from './editor/marks'
@@ -26,7 +27,7 @@ export function OutputPane({ dark }: { dark: boolean }) {
       marksField,
       copyValueButton,
       baseTheme,
-      EditorView.contentAttributes.of({ 'aria-label': 'Formatted JSON output' }),
+      EditorView.contentAttributes.of({ 'aria-label': 'Formatted JSON output (editable)' }),
       // Minified output is one long line; wrap it so it reads top to bottom.
       ...(minified ? [EditorView.lineWrapping] : []),
     ],
@@ -54,6 +55,10 @@ export function OutputPane({ dark }: { dark: boolean }) {
       <div className="flex items-center justify-between gap-2 pr-2">
         <h2 className="pane-title">Output</h2>
         <div className="flex items-center gap-2">
+          <CopyAllButton
+            label="Copy all output"
+            getText={() => (view === 'code' && editors.output?.state.doc.toString()) || output}
+          />
           <LayoutSwitch />
           <fieldset className="segmented" aria-label="Output view">
             <button type="button" aria-pressed={view === 'code'} onClick={() => setView('code')}>
@@ -92,8 +97,6 @@ export function OutputPane({ dark }: { dark: boolean }) {
             className="h-full"
             theme={dark ? 'dark' : 'light'}
             extensions={extensions}
-            readOnly
-            editable={false}
             onCreateEditor={(v) => {
               editors.output = v
             }}
