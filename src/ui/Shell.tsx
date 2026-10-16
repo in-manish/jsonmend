@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
-import { ROUTES } from '../routes'
+import { pathFor, ROUTES } from '../routes'
 import { type Tool, useAppStore } from '../store/useAppStore'
 import App from './App'
 import { useTheme } from './hooks/useTheme'
-import { syncUrl, titleFor, toolFromLocation } from './navigation'
+import { normalizeUrl, syncUrl, titleFor, toolFromLocation } from './navigation'
 import { PyIndentTool } from './pyindent/PyIndentTool'
 import { UrlTool } from './url/UrlTool'
 
@@ -12,7 +12,7 @@ const LABELS: Record<Tool, string> = {
   url: 'URL encode / decode',
   py: 'Python indentation',
 }
-const TABS = ROUTES.map((r) => ({ id: r.tool, label: LABELS[r.tool], slug: r.slug }))
+const TABS = ROUTES.map((r) => ({ id: r.tool, label: LABELS[r.tool] }))
 
 /** Tab bar over the independent tools; each tool owns its whole screen below it. */
 export function Shell() {
@@ -22,11 +22,8 @@ export function Shell() {
 
   // Address bar <-> tool: canonical path on load, Back/Forward switch tools, title per tool.
   useEffect(() => {
-    syncUrl(useAppStore.getState().tool, 'replace')
-    const onPop = () => {
-      const t = toolFromLocation()
-      if (t) useAppStore.getState().setTool(t)
-    }
+    normalizeUrl(useAppStore.getState().tool)
+    const onPop = () => useAppStore.getState().setTool(toolFromLocation())
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
@@ -43,7 +40,7 @@ export function Shell() {
         {TABS.map((t) => (
           <a
             key={t.id}
-            href={`${import.meta.env.BASE_URL}${t.slug}`}
+            href={pathFor(t.id, import.meta.env.BASE_URL)}
             className="tool-tab"
             aria-current={tool === t.id ? 'page' : undefined}
             onClick={(e) => {
@@ -51,7 +48,7 @@ export function Shell() {
               if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
               e.preventDefault()
               setTool(t.id)
-              syncUrl(t.id, 'push')
+              syncUrl(t.id)
             }}
           >
             {t.label}

@@ -1,33 +1,39 @@
 import { pathFor, routeFor, type Tool, toolFromPath } from '../routes'
 import { useAppStore } from '../store/useAppStore'
-import { decodeShare } from './lib/share'
 
 const BASE = import.meta.env.BASE_URL
 
-/** The tool the address bar asks for. A bare old-style share link (`/#input=...`) means JSON. */
-export function toolFromLocation(): Tool | undefined {
-  return (
-    toolFromPath(location.pathname, BASE) ??
-    (decodeShare(location.hash) !== undefined ? 'json' : undefined)
-  )
+/** The tool the address bar asks for: its path, otherwise (the root, old share links) JSON. */
+export function toolFromLocation(): Tool {
+  return toolFromPath(location.pathname, BASE) ?? 'json'
 }
 
-/** Run before the first render: an explicit path wins over the last-used tool. */
+/** Run before the first render. */
 export function applyLocationToStore() {
-  const tool = toolFromLocation()
-  if (tool) useAppStore.setState({ tool })
+  useAppStore.setState({ tool: toolFromLocation() })
 }
 
 /**
- * Makes the address bar match `tool`. Switching tools pushes a history entry and drops the
- * query and hash (a share link's data belongs to the JSON tool); the initial sync replaces the
- * entry and keeps them.
+ * Makes the address bar match `tool` when the user switches tools: pushes a history entry and
+ * drops the query and hash (a share link's data belongs to the JSON tool). A URL that already
+ * opens the tool (`/json-formatter`, `/python`) is left exactly as typed.
  */
-export function syncUrl(tool: Tool, mode: 'push' | 'replace') {
+export function syncUrl(tool: Tool) {
+  if (toolFromPath(location.pathname, BASE) === tool) return
+  history.pushState(null, '', pathFor(tool, BASE))
+}
+
+/** On load: tidy URLs that don't map to a tool, and spell out aliases of the non-default tools. */
+export function normalizeUrl(tool: Tool) {
   const path = pathFor(tool, BASE)
-  if (location.pathname === path) return
-  const rest = mode === 'replace' ? location.search + location.hash : ''
-  history[mode === 'push' ? 'pushState' : 'replaceState'](null, '', path + rest)
+  const known = toolFromPath(location.pathname, BASE)
+  if (known === undefined) {
+    // The root (and old `/#input=` links) stay as they are; anything else is a mistyped path.
+    if (location.pathname !== BASE)
+      history.replaceState(null, '', BASE + location.search + location.hash)
+  } else if (tool !== 'json' && location.pathname !== path) {
+    history.replaceState(null, '', path + location.search + location.hash)
+  }
 }
 
 export function titleFor(tool: Tool): string {

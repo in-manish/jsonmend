@@ -117,7 +117,6 @@ export const useAppStore = create<AppState>()(
         options: s.options,
         theme: s.theme,
         orientation: s.orientation,
-        tool: s.tool,
         view: s.view,
         reportOpen: s.reportOpen,
       }),

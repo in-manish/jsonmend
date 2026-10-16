@@ -35,13 +35,12 @@ Each tool has its own URL, so a link opens the tool it was copied from:
 
 | Tool | URL |
 |---|---|
-| JSON formatter | `/json-formatter` |
+| JSON formatter | `/` (also `/json-formatter`, `/json-parser`) |
 | URL encode / decode | `/url-encode-decode` |
 | Python indentation | `/python-indentation` |
 
-The root `/` opens the last tool you used. Switching tabs updates the address bar and Back/Forward
-work. Share links from the JSON tool look like `/json-formatter#input=...`; older `/#input=...`
-links still work.
+The root `/` opens the JSON formatter and its URL is left alone. Switching tabs updates the
+address bar (the JSON tab goes back to `/`) and Back/Forward work. JSON share links look like `/#input=...`.
 
 ## Getting started
 

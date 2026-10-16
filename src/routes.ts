@@ -21,7 +21,7 @@ export const ROUTES: Route[] = [
     title: 'JSON formatter and repair',
     description:
       'Paste Python dicts, JS objects or broken JSON and get valid, pretty-printed JSON with a report of every change. Runs in your browser.',
-    aliases: ['json'],
+    aliases: ['json', 'json-parser', 'json-formatter-and-repair'],
   },
   {
     tool: 'url',
@@ -59,6 +59,10 @@ export function routeFor(tool: Tool): Route {
   return ROUTES.find((r) => r.tool === tool) ?? ROUTES[0]
 }
 
+/**
+ * The URL a tool lives at. The JSON formatter is the default tool, so it is the bare site root;
+ * `/json-formatter` (and the aliases) still open it when typed.
+ */
 export function pathFor(tool: Tool, base = '/'): string {
-  return `${base}${routeFor(tool).slug}`
+  return tool === 'json' ? base : `${base}${routeFor(tool).slug}`
 }

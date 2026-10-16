@@ -314,9 +314,29 @@ test('every tool restores its input after a reload until the user clears it', as
 test.describe('tool URLs', () => {
   const path = (page: import('@playwright/test').Page) => new URL(page.url()).pathname
 
-  test('the root settles on the JSON formatter URL', async ({ page }) => {
-    await expect.poll(() => path(page)).toBe('/json-formatter')
+  test('the root opens the JSON formatter and keeps the bare URL', async ({ page }) => {
+    await expect(page.locator('section[aria-label="Input"]')).toBeVisible()
+    await page.waitForTimeout(300)
+    expect(path(page)).toBe('/')
     await expect(page).toHaveTitle(/JSON formatter/)
+  })
+
+  test('the root opens the JSON formatter even if another tool was used last', async ({ page }) => {
+    await page.getByRole('link', { name: 'Python indentation' }).click()
+    await page.goto('/')
+    await expect(page.locator('section[aria-label="Input"]')).toBeVisible()
+    expect(path(page)).toBe('/')
+  })
+
+  test('/json-formatter and /json-parser open the JSON tool and stay as typed', async ({
+    page,
+  }) => {
+    for (const p of ['/json-formatter', '/json-parser']) {
+      await page.goto(p)
+      await expect(page.locator('section[aria-label="Input"]')).toBeVisible()
+      await page.waitForTimeout(200)
+      expect(path(page)).toBe(p)
+    }
   })
 
   test('each tool URL opens its tool directly and survives a reload', async ({ page }) => {
@@ -329,20 +349,17 @@ test.describe('tool URLs', () => {
 
     await page.goto('/url-encode-decode')
     await expect(page.getByLabel('Encoded URL')).toBeVisible()
-    await page.goto('/json-formatter')
-    await expect(page.locator('section[aria-label="Input"]')).toBeVisible()
   })
 
-  test('an explicit URL beats the last-used tool, and aliases are canonicalized', async ({
-    page,
-  }) => {
-    await page.getByRole('link', { name: 'URL encode / decode' }).click()
+  test('aliases of other tools are spelled out in the address bar', async ({ page }) => {
     await page.goto('/python')
     await expect(page.locator('section[aria-label="Python input"]')).toBeVisible()
     await expect.poll(() => path(page)).toBe('/python-indentation')
   })
 
-  test('switching tabs changes the URL and Back/Forward follow it', async ({ page }) => {
+  test('switching tabs changes the URL; the JSON tab goes back to the bare root', async ({
+    page,
+  }) => {
     await page.getByRole('link', { name: 'Python indentation' }).click()
     expect(path(page)).toBe('/python-indentation')
     await page.getByRole('link', { name: 'URL encode / decode' }).click()
@@ -354,23 +371,28 @@ test.describe('tool URLs', () => {
     await expect(page.locator('section[aria-label="Python input"]')).toBeVisible()
     await page.goForward()
     await expect(page.getByLabel('Encoded URL')).toBeVisible()
+
+    await page.getByRole('link', { name: 'JSON formatter' }).click()
+    expect(path(page)).toBe('/')
+    await expect(page.locator('section[aria-label="Input"]')).toBeVisible()
   })
 
-  test('old share links at the site root still open the JSON tool with the data', async ({
-    page,
-  }) => {
-    await page.getByRole('link', { name: 'URL encode / decode' }).click()
-    const b64 = Buffer.from('{"old": 1}').toString('base64url')
-    await page.goto(`/#input=${b64}`)
-    await expect.poll(() => outputText(page)).toContain('"old": 1')
+  test('clicking the JSON tab on /json-formatter does not rewrite the URL', async ({ page }) => {
+    await page.goto('/json-formatter')
+    await page.getByRole('link', { name: 'JSON formatter' }).click()
     expect(path(page)).toBe('/json-formatter')
   })
 
-  test('an unknown path falls back to a tool instead of a blank page', async ({ page }) => {
+  test('old share links at the site root open the JSON tool with the data', async ({ page }) => {
+    const b64 = Buffer.from('{"old": 1}').toString('base64url')
+    await page.goto(`/#input=${b64}`)
+    await expect.poll(() => outputText(page)).toContain('"old": 1')
+    expect(path(page)).toBe('/')
+  })
+
+  test('an unknown path falls back to the JSON formatter at the root', async ({ page }) => {
     await page.goto('/no-such-page')
-    await expect(page.getByRole('navigation', { name: 'Tools' })).toBeVisible()
-    await expect
-      .poll(() => path(page))
-      .toMatch(/^\/(json-formatter|url-encode-decode|python-indentation)$/)
+    await expect(page.locator('section[aria-label="Input"]')).toBeVisible()
+    await expect.poll(() => path(page)).toBe('/')
   })
 })
