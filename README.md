@@ -1,7 +1,7 @@
 # jsonmend
 
 Paste anything that looks like data and get valid, pretty-printed JSON back, plus a report of
-every change that was made. Runs entirely in the browser: nothing is uploaded, and the deployed
+every change that was made. Runs entirely in the browser: nothing is uploaded (your input is kept in this browser's localStorage so a reload or crash restores it until you clear it), and the deployed
 page's Content Security Policy blocks all network requests.
 
 It accepts:
@@ -18,6 +18,18 @@ highlighted and flagged so you can verify them.
 
 See [docs/SUPPORTED-TYPES.md](docs/SUPPORTED-TYPES.md) for everything it understands, and
 [docs/PLAN.md](docs/PLAN.md) for the original spec.
+
+A second tab, **URL encode / decode**, converts URLs and text between plain and percent-encoded
+(component or full-URL), form-encoded (`+` for space) and Base64 / Base64 URL-safe forms. It can
+decode double-encoded input repeatedly and splits a decoded URL into its parts. It is separate
+from the JSON formatter and equally local.
+
+A third tab, **Python indentation**, takes Python code with tabs, mixed tabs and spaces, or the
+wrong indent size and rebuilds the indentation from the block structure (4 spaces by default).
+Offending whitespace is highlighted in the input, every issue is listed, and the corrected code
+can be copied, downloaded as `.py`, or copied as a `python3 -c "$(cat <<'PY' ...)"` command for
+bash/zsh. It never touches strings, docstrings or bracket continuations, flags what it can't fix
+safely (missing block, unexpected indent), and does not check Python syntax.
 
 ## Getting started
 
@@ -67,7 +79,7 @@ src/core/                 pure TS pipeline, no DOM/React imports
   serialize/              JSON writer (indent, sort, duplicate keys, escaping, output spans)
   ast.ts options.ts report.ts
 src/worker/               Web Worker running the core (Comlink), with cancellation
-src/store/                Zustand store; options and theme persist, input never does
+src/store/                Zustand store; options, theme and every tool's input persist (autosave.ts)
 src/ui/                   React app: editors, report, options, tree view, toolbar
 tests/core                unit, property, fuzz, round-trip and differential tests
 tests/fixtures/<group>    input / expected output pairs (json, lenient, types, repair)

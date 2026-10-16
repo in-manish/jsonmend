@@ -182,3 +182,131 @@ test('the output is editable and the copy-all icons copy the whole pane', async 
   await page.getByRole('button', { name: 'Copy all input' }).click()
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('[1,2]')
 })
+
+test('panes collapse to a rail and expand again', async ({ page }) => {
+  await page.getByRole('button', { name: 'Input on left, output on right' }).click()
+  await page.getByRole('button', { name: 'Collapse input (left)' }).click()
+  await expect(page.locator('section[aria-label="Input"]')).toBeHidden()
+  await expect(page.locator('section[aria-label="Output"]')).toBeVisible()
+
+  // Collapsing the output instead expands the input.
+  await page.getByRole('button', { name: 'Collapse output (right)' }).click()
+  await expect(page.locator('section[aria-label="Input"]')).toBeVisible()
+  await expect(page.locator('section[aria-label="Output"]')).toBeHidden()
+
+  await page.getByRole('button', { name: 'Expand output' }).click()
+  await expect(page.locator('section[aria-label="Output"]')).toBeVisible()
+})
+
+test('the URL tab decodes, encodes and splits a URL, leaving the JSON tool intact', async ({
+  page,
+}) => {
+  await page.getByRole('button', { name: 'URL encode / decode' }).click()
+  const encoded = page.getByLabel('Encoded URL')
+  await encoded.fill('https%3A%2F%2Fa.com%2Fp%3Fq%3Dhello%2520world')
+  await expect(page.getByLabel('Result')).toHaveValue('https://a.com/p?q=hello%20world')
+  await expect(page.getByRole('region', { name: 'URL parts' })).toContainText('a.com')
+
+  await page.getByLabel('Decode repeatedly').check()
+  await expect(page.getByLabel('Result')).toHaveValue('https://a.com/p?q=hello world')
+
+  await page.getByRole('button', { name: 'Encode', exact: true }).click()
+  await page.getByLabel('Text or URL to encode').fill('a b&c')
+  await expect(page.getByLabel('Result')).toHaveValue('a%20b%26c')
+  await page.getByLabel('Encoding type').selectOption('base64')
+  await expect(page.getByLabel('Result')).toHaveValue('YSBiJmM=')
+
+  await page.getByRole('button', { name: 'JSON formatter' }).click()
+  await setInput(page, '{a: 1}')
+  await expect.poll(() => outputText(page)).toContain('"a": 1')
+})
+
+test('the Python tab highlights tabs, fixes the indentation and builds a terminal command', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.getByRole('button', { name: 'Python indentation' }).click()
+  const pyInput = page.locator('section[aria-label="Python input"] .cm-content')
+  await pyInput.click()
+  await page.keyboard.insertText('def f(x):\n\tif x:\n\t\treturn 1\n\treturn 2\n')
+
+  const fixed = page.locator('section[aria-label="Python output"] .cm-content')
+  await expect.poll(() => fixed.innerText()).toContain('    if x:')
+  await expect(page.getByRole('region', { name: 'Indentation issues' })).toContainText(
+    'Tab used for indentation',
+  )
+  // The tabs in the input are highlighted.
+  await expect(pyInput.locator('.cm-repair').first()).toBeVisible()
+
+  await page.getByRole('button', { name: 'Copy terminal command' }).click()
+  const cmd = await page.evaluate(() => navigator.clipboard.readText())
+  expect(cmd).toContain(
+    `python3 -c "$(cat <<'PY'\ndef f(x):\n    if x:\n        return 1\n    return 2\nPY\n)"`,
+  )
+
+  await page.getByRole('button', { name: 'Use fixed code as input' }).click()
+  await expect(page.getByRole('region', { name: 'Indentation issues' })).toContainText(
+    'nothing to fix',
+  )
+})
+
+test('the Python and URL outputs are editable and copy what you edited', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.getByRole('button', { name: 'Python indentation' }).click()
+  await page.locator('section[aria-label="Python input"] .cm-content').click()
+  await page.keyboard.insertText('if a:\n\tx = 1\n')
+  const fixed = page.locator('section[aria-label="Python output"] .cm-content')
+  await expect.poll(() => fixed.innerText()).toContain('    x = 1')
+  await fixed.click()
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.keyboard.insertText('print("edited")\n')
+  await page.getByRole('button', { name: 'Copy', exact: true }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('print("edited")\n')
+
+  await page.getByRole('button', { name: 'URL encode / decode' }).click()
+  await page.getByLabel('Encoded URL').fill('a%20b')
+  const result = page.getByLabel('Result (editable)')
+  await expect(result).toHaveValue('a b')
+  await result.fill('a b edited')
+  await page.getByRole('button', { name: 'Copy all output' }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('a b edited')
+  await page.getByLabel('Encoded URL').fill('c%20d')
+  await expect(result).toHaveValue('c d')
+})
+
+test('every tool restores its input after a reload until the user clears it', async ({ page }) => {
+  const saved = (key: string) => page.evaluate((k) => localStorage.getItem(k), key)
+
+  await setInput(page, "{'kept': True}")
+  await expect.poll(() => saved('jsonmend:json-input')).toContain('kept')
+
+  await page.getByRole('button', { name: 'URL encode / decode' }).click()
+  await page.getByLabel('Encoded URL').fill('a%20b')
+  await page.getByLabel('Decode repeatedly').check()
+  await expect.poll(() => saved('jsonmend:url')).toContain('a%20b')
+
+  await page.getByRole('button', { name: 'Python indentation' }).click()
+  await page.locator('section[aria-label="Python input"] .cm-content').click()
+  await page.keyboard.insertText('if a:\n\tx = 1\n')
+  await expect.poll(() => saved('jsonmend:python')).toContain('x = 1')
+
+  await page.reload()
+  await expect(page.locator('section[aria-label="Python output"] .cm-content')).toContainText(
+    '    x = 1',
+  )
+  await page.getByRole('button', { name: 'URL encode / decode' }).click()
+  await expect(page.getByLabel('Encoded URL')).toHaveValue('a%20b')
+  await expect(page.getByLabel('Decode repeatedly')).toBeChecked()
+  await page.getByRole('button', { name: 'JSON formatter' }).click()
+  await expect.poll(() => outputText(page)).toContain('"kept": true')
+
+  await page.getByRole('button', { name: 'Clear' }).click()
+  await expect.poll(() => saved('jsonmend:json-input')).toBe('{"input":""}')
+  await page.reload()
+  await expect(output(page)).toHaveCount(0)
+  await expect(page.getByText('Try a sample')).toBeVisible()
+})

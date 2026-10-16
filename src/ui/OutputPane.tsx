@@ -4,6 +4,7 @@ import CodeMirror from '@uiw/react-codemirror'
 import { useEffect, useMemo } from 'react'
 import { countBySeverity } from '../core/report'
 import { useAppStore } from '../store/useAppStore'
+import { CollapseButton } from './CollapseButton'
 import { CopyAllButton } from './CopyAllButton'
 import { EmptyState } from './EmptyState'
 import { copyValueButton } from './editor/copyValue'
@@ -68,6 +69,7 @@ export function OutputPane({ dark }: { dark: boolean }) {
               Tree
             </button>
           </fieldset>
+          <CollapseButton pane="output" />
         </div>
       </div>
 

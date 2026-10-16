@@ -4,6 +4,7 @@ import { EditorView } from '@codemirror/view'
 import CodeMirror from '@uiw/react-codemirror'
 import { type DragEvent, useEffect, useMemo, useState } from 'react'
 import { useAppStore } from '../store/useAppStore'
+import { CollapseButton } from './CollapseButton'
 import { CopyAllButton } from './CopyAllButton'
 import { formatKeymap } from './editor/keymap'
 import { toLint } from './editor/lint'
@@ -77,10 +78,13 @@ export function InputPane({ dark }: { dark: boolean }) {
     >
       <div className="flex items-center justify-between pr-2">
         <h2 className="pane-title">Input</h2>
-        <CopyAllButton
-          label="Copy all input"
-          getText={() => editors.input?.state.doc.toString() ?? input}
-        />
+        <div className="flex items-center gap-1">
+          <CopyAllButton
+            label="Copy all input"
+            getText={() => editors.input?.state.doc.toString() ?? input}
+          />
+          <CollapseButton pane="input" />
+        </div>
       </div>
       <div className="min-h-0 flex-1 overflow-hidden">
         <CodeMirror

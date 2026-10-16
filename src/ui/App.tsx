@@ -1,6 +1,7 @@
 import { type CSSProperties, useEffect, useState } from 'react'
 import { useAppStore } from '../store/useAppStore'
 import { Announcer } from './Announcer'
+import { CollapsedRail } from './CollapseButton'
 import { useFormatter } from './hooks/useFormatter'
 import { useTheme } from './hooks/useTheme'
 import { InputPane } from './InputPane'
@@ -18,6 +19,8 @@ export default function App() {
   useFormatter()
   const [split, setSplit] = useState(50)
   const horizontal = useAppStore((s) => s.orientation) === 'horizontal'
+  const collapsed = useAppStore((s) => s.collapsed)
+  const anyCollapsed = collapsed.input || collapsed.output
 
   // Input from a share link (on load, or pasted into an open tab), then drop it from the URL.
   useEffect(() => {
@@ -50,18 +53,36 @@ export default function App() {
   }, [])
 
   return (
-    <div className="flex h-dvh flex-col bg-[var(--bg)] text-[var(--fg)]">
+    <div className="flex h-full flex-col bg-[var(--bg)] text-[var(--fg)]">
       <Toolbar />
       <main
         className={`flex min-h-0 flex-1 flex-col ${horizontal ? 'md:flex-row' : ''}`}
         style={{ '--split': `${split}%` } as CSSProperties}
       >
-        <div className="flex min-h-0 flex-1 md:flex-none md:basis-[var(--split)]">
-          <InputPane dark={dark} />
+        <div
+          className={`flex min-h-0 ${
+            collapsed.input
+              ? 'flex-none'
+              : collapsed.output
+                ? 'flex-1'
+                : 'flex-1 md:flex-none md:basis-[var(--split)]'
+          }`}
+        >
+          {collapsed.input && <CollapsedRail pane="input" />}
+          <div className={`flex min-h-0 min-w-0 flex-1 ${collapsed.input ? 'hidden' : ''}`}>
+            <InputPane dark={dark} />
+          </div>
         </div>
-        <Splitter horizontal={horizontal} onResize={setSplit} />
-        <div className="flex min-h-0 flex-1 border-t border-[var(--border)] md:border-t-0">
-          <OutputPane dark={dark} />
+        {!anyCollapsed && <Splitter horizontal={horizontal} onResize={setSplit} />}
+        <div
+          className={`flex min-h-0 border-t border-[var(--border)] md:border-t-0 ${
+            collapsed.output ? 'flex-none' : 'flex-1'
+          }`}
+        >
+          {collapsed.output && <CollapsedRail pane="output" />}
+          <div className={`flex min-h-0 min-w-0 flex-1 ${collapsed.output ? 'hidden' : ''}`}>
+            <OutputPane dark={dark} />
+          </div>
         </div>
       </main>
       <ReportPanel />

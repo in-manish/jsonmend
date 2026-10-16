@@ -2,12 +2,18 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import type { FormatOptions, FormatResult } from '../core'
 import { DEFAULT_OPTIONS } from '../core/options'
+import { autosave, loadSaved, SAVE_FAILED } from './autosave'
 import { safeStorage } from './storage'
+
+const INPUT_KEY = 'jsonmend:json-input'
+const saved = loadSaved<{ input: string }>(INPUT_KEY)
 
 export type Theme = 'system' | 'light' | 'dark'
 export type View = 'code' | 'tree'
 /** `vertical`: input on top, output below. `horizontal`: input left, output right. */
 export type Orientation = 'vertical' | 'horizontal'
+export type Pane = 'input' | 'output'
+export type Tool = 'json' | 'url' | 'py'
 
 /** Inputs above this size don't auto-format on every keystroke. */
 export const AUTO_RUN_LIMIT = 2 * 1024 * 1024
@@ -24,6 +30,9 @@ interface AppState {
   view: View
   theme: Theme
   orientation: Orientation
+  tool: Tool
+  /** Panes folded into a slim rail; at most one at a time. */
+  collapsed: Record<Pane, boolean>
   reportOpen: boolean
   optionsOpen: boolean
   /** Cursor position in the input editor, 1-based. */
@@ -43,6 +52,8 @@ interface AppState {
   setView(view: View): void
   setTheme(theme: Theme): void
   setOrientation(orientation: Orientation): void
+  toggleCollapsed(pane: Pane): void
+  setTool(tool: Tool): void
   setReportOpen(open: boolean): void
   setOptionsOpen(open: boolean): void
   setCursor(line: number, column: number): void
@@ -54,13 +65,15 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      input: '',
+      input: saved.input ?? '',
       options: { ...DEFAULT_OPTIONS },
       prettyIndent: 2,
       running: false,
       view: 'code',
       theme: 'system',
       orientation: 'vertical',
+      tool: 'json',
+      collapsed: { input: false, output: false },
       reportOpen: true,
       optionsOpen: false,
       cursor: { line: 1, column: 1 },
@@ -78,6 +91,15 @@ export const useAppStore = create<AppState>()(
       setView: (view) => set({ view }),
       setTheme: (theme) => set({ theme }),
       setOrientation: (orientation) => set({ orientation }),
+      setTool: (tool) => set({ tool }),
+      // Collapsing one pane expands the other, so a pane is always visible.
+      toggleCollapsed: (pane) =>
+        set((s) => ({
+          collapsed:
+            pane === 'input'
+              ? { input: !s.collapsed.input, output: false }
+              : { input: false, output: !s.collapsed.output },
+        })),
       setReportOpen: (reportOpen) => set({ reportOpen }),
       setOptionsOpen: (optionsOpen) => set({ optionsOpen }),
       setCursor: (line, column) => set({ cursor: { line, column } }),
@@ -89,11 +111,12 @@ export const useAppStore = create<AppState>()(
       name: 'jsonmend:prefs',
       version: 1,
       storage: createJSONStorage(() => safeStorage),
-      // The input is never persisted: pasted data stays in memory only.
+      // The input is saved separately and debounced (see autosave below); prefs are small.
       partialize: (s) => ({
         options: s.options,
         theme: s.theme,
         orientation: s.orientation,
+        tool: s.tool,
         view: s.view,
         reportOpen: s.reportOpen,
       }),
@@ -103,4 +126,11 @@ export const useAppStore = create<AppState>()(
       },
     },
   ),
+)
+
+autosave(
+  useAppStore,
+  INPUT_KEY,
+  (s) => ({ input: s.input }),
+  () => useAppStore.getState().notify(SAVE_FAILED),
 )
