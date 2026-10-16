@@ -31,6 +31,18 @@ can be copied, downloaded as `.py`, or copied as a `python3 -c "$(cat <<'PY' ...
 bash/zsh. It never touches strings, docstrings or bracket continuations, flags what it can't fix
 safely (missing block, unexpected indent), and does not check Python syntax.
 
+Each tool has its own URL, so a link opens the tool it was copied from:
+
+| Tool | URL |
+|---|---|
+| JSON formatter | `/json-formatter` |
+| URL encode / decode | `/url-encode-decode` |
+| Python indentation | `/python-indentation` |
+
+The root `/` opens the last tool you used. Switching tabs updates the address bar and Back/Forward
+work. Share links from the JSON tool look like `/json-formatter#input=...`; older `/#input=...`
+links still work.
+
 ## Getting started
 
 ```sh

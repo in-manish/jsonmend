@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import type { FormatOptions, FormatResult } from '../core'
 import { DEFAULT_OPTIONS } from '../core/options'
+import type { Tool } from '../routes'
 import { autosave, loadSaved, SAVE_FAILED } from './autosave'
 import { safeStorage } from './storage'
 
@@ -12,8 +13,8 @@ export type Theme = 'system' | 'light' | 'dark'
 export type View = 'code' | 'tree'
 /** `vertical`: input on top, output below. `horizontal`: input left, output right. */
 export type Orientation = 'vertical' | 'horizontal'
+export type { Tool }
 export type Pane = 'input' | 'output'
-export type Tool = 'json' | 'url' | 'py'
 
 /** Inputs above this size don't auto-format on every keystroke. */
 export const AUTO_RUN_LIMIT = 2 * 1024 * 1024

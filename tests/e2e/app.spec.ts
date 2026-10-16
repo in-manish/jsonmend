@@ -201,7 +201,7 @@ test('panes collapse to a rail and expand again', async ({ page }) => {
 test('the URL tab decodes, encodes and splits a URL, leaving the JSON tool intact', async ({
   page,
 }) => {
-  await page.getByRole('button', { name: 'URL encode / decode' }).click()
+  await page.getByRole('link', { name: 'URL encode / decode' }).click()
   const encoded = page.getByLabel('Encoded URL')
   await encoded.fill('https%3A%2F%2Fa.com%2Fp%3Fq%3Dhello%2520world')
   await expect(page.getByLabel('Result')).toHaveValue('https://a.com/p?q=hello%20world')
@@ -216,7 +216,7 @@ test('the URL tab decodes, encodes and splits a URL, leaving the JSON tool intac
   await page.getByLabel('Encoding type').selectOption('base64')
   await expect(page.getByLabel('Result')).toHaveValue('YSBiJmM=')
 
-  await page.getByRole('button', { name: 'JSON formatter' }).click()
+  await page.getByRole('link', { name: 'JSON formatter' }).click()
   await setInput(page, '{a: 1}')
   await expect.poll(() => outputText(page)).toContain('"a": 1')
 })
@@ -226,7 +226,7 @@ test('the Python tab highlights tabs, fixes the indentation and builds a termina
   context,
 }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.getByRole('button', { name: 'Python indentation' }).click()
+  await page.getByRole('link', { name: 'Python indentation' }).click()
   const pyInput = page.locator('section[aria-label="Python input"] .cm-content')
   await pyInput.click()
   await page.keyboard.insertText('def f(x):\n\tif x:\n\t\treturn 1\n\treturn 2\n')
@@ -256,7 +256,7 @@ test('the Python and URL outputs are editable and copy what you edited', async (
   context,
 }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.getByRole('button', { name: 'Python indentation' }).click()
+  await page.getByRole('link', { name: 'Python indentation' }).click()
   await page.locator('section[aria-label="Python input"] .cm-content').click()
   await page.keyboard.insertText('if a:\n\tx = 1\n')
   const fixed = page.locator('section[aria-label="Python output"] .cm-content')
@@ -267,7 +267,7 @@ test('the Python and URL outputs are editable and copy what you edited', async (
   await page.getByRole('button', { name: 'Copy', exact: true }).click()
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('print("edited")\n')
 
-  await page.getByRole('button', { name: 'URL encode / decode' }).click()
+  await page.getByRole('link', { name: 'URL encode / decode' }).click()
   await page.getByLabel('Encoded URL').fill('a%20b')
   const result = page.getByLabel('Result (editable)')
   await expect(result).toHaveValue('a b')
@@ -284,12 +284,12 @@ test('every tool restores its input after a reload until the user clears it', as
   await setInput(page, "{'kept': True}")
   await expect.poll(() => saved('jsonmend:json-input')).toContain('kept')
 
-  await page.getByRole('button', { name: 'URL encode / decode' }).click()
+  await page.getByRole('link', { name: 'URL encode / decode' }).click()
   await page.getByLabel('Encoded URL').fill('a%20b')
   await page.getByLabel('Decode repeatedly').check()
   await expect.poll(() => saved('jsonmend:url')).toContain('a%20b')
 
-  await page.getByRole('button', { name: 'Python indentation' }).click()
+  await page.getByRole('link', { name: 'Python indentation' }).click()
   await page.locator('section[aria-label="Python input"] .cm-content').click()
   await page.keyboard.insertText('if a:\n\tx = 1\n')
   await expect.poll(() => saved('jsonmend:python')).toContain('x = 1')
@@ -298,10 +298,10 @@ test('every tool restores its input after a reload until the user clears it', as
   await expect(page.locator('section[aria-label="Python output"] .cm-content')).toContainText(
     '    x = 1',
   )
-  await page.getByRole('button', { name: 'URL encode / decode' }).click()
+  await page.getByRole('link', { name: 'URL encode / decode' }).click()
   await expect(page.getByLabel('Encoded URL')).toHaveValue('a%20b')
   await expect(page.getByLabel('Decode repeatedly')).toBeChecked()
-  await page.getByRole('button', { name: 'JSON formatter' }).click()
+  await page.getByRole('link', { name: 'JSON formatter' }).click()
   await expect.poll(() => outputText(page)).toContain('"kept": true')
 
   await page.getByRole('button', { name: 'Clear' }).click()
@@ -309,4 +309,68 @@ test('every tool restores its input after a reload until the user clears it', as
   await page.reload()
   await expect(output(page)).toHaveCount(0)
   await expect(page.getByText('Try a sample')).toBeVisible()
+})
+
+test.describe('tool URLs', () => {
+  const path = (page: import('@playwright/test').Page) => new URL(page.url()).pathname
+
+  test('the root settles on the JSON formatter URL', async ({ page }) => {
+    await expect.poll(() => path(page)).toBe('/json-formatter')
+    await expect(page).toHaveTitle(/JSON formatter/)
+  })
+
+  test('each tool URL opens its tool directly and survives a reload', async ({ page }) => {
+    await page.goto('/python-indentation')
+    await expect(page.locator('section[aria-label="Python input"]')).toBeVisible()
+    await expect(page).toHaveTitle(/Python indentation/)
+    await page.reload()
+    await expect(page.locator('section[aria-label="Python input"]')).toBeVisible()
+    expect(path(page)).toBe('/python-indentation')
+
+    await page.goto('/url-encode-decode')
+    await expect(page.getByLabel('Encoded URL')).toBeVisible()
+    await page.goto('/json-formatter')
+    await expect(page.locator('section[aria-label="Input"]')).toBeVisible()
+  })
+
+  test('an explicit URL beats the last-used tool, and aliases are canonicalized', async ({
+    page,
+  }) => {
+    await page.getByRole('link', { name: 'URL encode / decode' }).click()
+    await page.goto('/python')
+    await expect(page.locator('section[aria-label="Python input"]')).toBeVisible()
+    await expect.poll(() => path(page)).toBe('/python-indentation')
+  })
+
+  test('switching tabs changes the URL and Back/Forward follow it', async ({ page }) => {
+    await page.getByRole('link', { name: 'Python indentation' }).click()
+    expect(path(page)).toBe('/python-indentation')
+    await page.getByRole('link', { name: 'URL encode / decode' }).click()
+    expect(path(page)).toBe('/url-encode-decode')
+    await expect(page.getByLabel('Encoded URL')).toBeVisible()
+
+    await page.goBack()
+    expect(path(page)).toBe('/python-indentation')
+    await expect(page.locator('section[aria-label="Python input"]')).toBeVisible()
+    await page.goForward()
+    await expect(page.getByLabel('Encoded URL')).toBeVisible()
+  })
+
+  test('old share links at the site root still open the JSON tool with the data', async ({
+    page,
+  }) => {
+    await page.getByRole('link', { name: 'URL encode / decode' }).click()
+    const b64 = Buffer.from('{"old": 1}').toString('base64url')
+    await page.goto(`/#input=${b64}`)
+    await expect.poll(() => outputText(page)).toContain('"old": 1')
+    expect(path(page)).toBe('/json-formatter')
+  })
+
+  test('an unknown path falls back to a tool instead of a blank page', async ({ page }) => {
+    await page.goto('/no-such-page')
+    await expect(page.getByRole('navigation', { name: 'Tools' })).toBeVisible()
+    await expect
+      .poll(() => path(page))
+      .toMatch(/^\/(json-formatter|url-encode-decode|python-indentation)$/)
+  })
 })
