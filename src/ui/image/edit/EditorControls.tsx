@@ -87,7 +87,7 @@ export function EditorControls(p: Props) {
             : 'No limit'
         }
       >
-        <TargetSizeControls target={edit.target} onChange={p.onTarget} />
+        <TargetSizeControls target={edit.target} onChange={p.onTarget} originalBytes={img.bytes} />
       </Section>
 
       <Section title="Info" summary={out ? formatBytes(out.blob.size) : '…'}>

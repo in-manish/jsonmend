@@ -50,11 +50,16 @@ export function FormatControls({ edit, onChange }: Props) {
         ))}
       </fieldset>
 
+      {!isLossy(edit.format) && (
+        <p className="text-xs text-[var(--muted)]">
+          PNG has no quality setting. To compress, use File size or pick JPG / WebP.
+        </p>
+      )}
       {isLossy(edit.format) && (
         <label className="flex flex-col gap-1">
           <span className="flex justify-between text-xs text-[var(--muted)]">
             <span>Smaller file</span>
-            <span className="tabular-nums">Quality {edit.quality}%</span>
+            <span className="tabular-nums">Quality {edit.quality}% (compression)</span>
             <span>Better</span>
           </span>
           <input

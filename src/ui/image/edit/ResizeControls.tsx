@@ -13,13 +13,17 @@ import { NumField } from '../NumField'
 import type { ResizeUnit } from '../useImageStore'
 
 const WIDTHS = [1920, 1280, 800]
-const PRINT_QUALITY = [
-  { dpi: 96, label: 'Screen (96 dpi)' },
-  { dpi: 150, label: 'Good print (150 dpi)' },
-  { dpi: 300, label: 'Best print (300 dpi)' },
-  { dpi: 72, label: 'Low (72 dpi)' },
-  { dpi: 600, label: 'Professional (600 dpi)' },
+const DPIS = [
+  { dpi: 0, label: 'Not set' },
+  { dpi: 72, label: '72 (web)' },
+  { dpi: 96, label: '96 (screen)' },
+  { dpi: 150, label: '150 (good print)' },
+  { dpi: 200, label: '200' },
+  { dpi: 300, label: '300 (best print)' },
+  { dpi: 600, label: '600 (professional)' },
 ]
+/** Used for inches / cm while no dpi is chosen. */
+const DEFAULT_PRINT_DPI = 300
 const UNITS: { id: ResizeUnit; label: string }[] = [
   { id: 'px', label: 'Pixels' },
   { id: 'percent', label: '%' },
@@ -68,6 +72,7 @@ export function ResizeControls({
   )
   const percent = Math.round((dims.width / original.width) * 1000) / 10
   const physical = unit === 'in' || unit === 'cm'
+  const printDpi = dpi || DEFAULT_PRINT_DPI
   const setWidth = (w: number) =>
     onDims({ width: w, height: lock ? linkedHeight(original, w) : dims.height })
   const setHeight = (h: number) =>
@@ -75,12 +80,12 @@ export function ResizeControls({
   const field = (label: 'Width' | 'Height', px: number, set: (v: number) => void) => (
     <NumField
       label={label}
-      value={physical ? pxToPhysical(px, unit, dpi) : px}
+      value={physical ? pxToPhysical(px, unit, printDpi) : px}
       min={physical ? 0.01 : 1}
-      max={physical ? pxToPhysical(MAX_EDGE, unit, dpi) : MAX_EDGE}
+      max={physical ? pxToPhysical(MAX_EDGE, unit, printDpi) : MAX_EDGE}
       step={physical ? 0.1 : 1}
       suffix={physical ? unit : 'px'}
-      onCommit={(v) => set(physical ? physicalToPx(v, unit, dpi) : v)}
+      onCommit={(v) => set(physical ? physicalToPx(v, unit, printDpi) : v)}
     />
   )
 
@@ -121,7 +126,11 @@ export function ResizeControls({
                 role="tab"
                 aria-selected={unit === u.id}
                 className="btn crop-chip"
-                onClick={() => onUnit(u.id)}
+                onClick={() => {
+                  // Inches and cm need a resolution; start from best print quality.
+                  if ((u.id === 'in' || u.id === 'cm') && !dpi) onDpi(DEFAULT_PRINT_DPI)
+                  onUnit(u.id)
+                }}
               >
                 {u.label}
               </button>
@@ -147,33 +156,34 @@ export function ResizeControls({
             <input type="checkbox" checked={lock} onChange={(e) => onLock(e.target.checked)} />
             Keep proportions
           </label>
-          {physical && (
-            <>
-              <select
-                className="input-sm"
-                aria-label="Print resolution"
-                value={dpi}
-                onChange={(e) => {
-                  const next = Number(e.target.value)
-                  // The printed size stays the same, so the number of pixels follows.
-                  onDims(scaleDim(dims, next / dpi))
-                  onDpi(next)
-                }}
-              >
-                {PRINT_QUALITY.map((p) => (
-                  <option key={p.dpi} value={p.dpi}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-[var(--muted)]" data-testid="print-size">
-                {dims.width}×{dims.height} px = {pxToPhysical(dims.width, 'in', dpi)}×
-                {pxToPhysical(dims.height, 'in', dpi)} in = {pxToPhysical(dims.width, 'cm', dpi)}×
-                {pxToPhysical(dims.height, 'cm', dpi)} cm at {dpi} dpi
-              </p>
-            </>
-          )}
         </div>
+      )}
+      <label className="flex items-center gap-2 text-sm">
+        <span className="flex-none text-[var(--muted)]">DPI</span>
+        <select
+          className="input-sm min-w-0 flex-1"
+          aria-label="Print resolution"
+          value={dpi}
+          onChange={(e) => {
+            const next = Number(e.target.value)
+            // In inches / cm the printed size stays the same, so the pixels follow.
+            if (physical && next) onDims(scaleDim(dims, next / printDpi))
+            onDpi(next)
+          }}
+        >
+          {DPIS.map((d) => (
+            <option key={d.dpi} value={d.dpi} disabled={physical && d.dpi === 0}>
+              {d.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      {dpi > 0 && (
+        <p className="text-xs text-[var(--muted)]" data-testid="print-size">
+          {dims.width}×{dims.height} px = {pxToPhysical(dims.width, 'in', dpi)}×
+          {pxToPhysical(dims.height, 'in', dpi)} in = {pxToPhysical(dims.width, 'cm', dpi)}×
+          {pxToPhysical(dims.height, 'cm', dpi)} cm at {dpi} dpi (saved in JPG and PNG)
+        </p>
       )}
       {(dims.width > original.width || dims.height > original.height) && (
         <p className="text-xs text-[var(--warn)]">Bigger than the original: no extra detail.</p>

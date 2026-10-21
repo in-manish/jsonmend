@@ -8,27 +8,34 @@ import type { EditorSession } from './useImageEditor'
  */
 export function PhonePreview({ s, bare }: { s: EditorSession; bare?: boolean }) {
   const [before, setBefore] = useState(false)
+  const [zoomed, setZoomed] = useState(false)
   const url = before ? s.originalUrl : s.resultUrl
 
   return (
-    <div className="checkerboard relative flex h-full min-h-0 items-center justify-center overflow-hidden">
+    <div
+      className={`checkerboard relative h-full min-h-0 ${zoomed ? 'overflow-auto' : 'overflow-hidden'}`}
+    >
       {url && (
         <button
           type="button"
           onClick={() => s.setView('crop')}
           aria-label={`${before ? 'Original image' : 'Resized image preview'}: tap to crop`}
-          className="absolute inset-0 flex items-center justify-center border-0 bg-transparent p-2"
+          className={
+            zoomed
+              ? 'block border-0 bg-transparent p-0'
+              : 'absolute inset-0 flex items-center justify-center border-0 bg-transparent p-2'
+          }
         >
           <img
             src={url}
             alt={before ? 'Original image' : 'Resized image preview'}
-            className="max-h-full max-w-full object-contain"
+            className={zoomed ? 'max-h-none max-w-none' : 'max-h-full max-w-full object-contain'}
           />
         </button>
       )}
 
       <div
-        className={`pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-2 ${bare ? 'hidden' : ''}`}
+        className={`pointer-events-none sticky inset-x-0 top-0 z-10 flex items-start justify-between p-2 ${bare ? 'hidden' : ''}`}
       >
         <fieldset
           aria-label="Compare"
@@ -46,6 +53,15 @@ export function PhonePreview({ s, bare }: { s: EditorSession; bare?: boolean }) 
             </button>
           ))}
         </fieldset>
+        <button
+          type="button"
+          onClick={() => setZoomed(!zoomed)}
+          aria-pressed={zoomed}
+          aria-label={zoomed ? 'Fit to screen' : 'Zoom to actual size'}
+          className="pointer-events-auto ml-auto mr-2 flex h-9 items-center rounded-full bg-black/60 px-3 text-[13px] font-medium text-white shadow backdrop-blur"
+        >
+          {zoomed ? 'Fit' : '1:1'}
+        </button>
         <button
           type="button"
           onClick={s.close}

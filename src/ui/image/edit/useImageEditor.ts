@@ -71,8 +71,15 @@ export function useImageEditor() {
   const [orient, setOrient] = useState<Orientation>(IDENTITY)
   const [view, setView] = useState<PreviewView>('result')
   const [zoom, setZoom] = useState<'fit' | 'actual'>('fit')
-  const physical = edit.unit === 'in' || edit.unit === 'cm'
-  const state = useEncode(opened?.img, dims, edit, crop, physical ? edit.dpi : undefined, orient)
+  // A chosen dpi is written into JPG / PNG files whatever unit the size was set in.
+  const state = useEncode(
+    opened?.img,
+    dims,
+    edit,
+    crop,
+    edit.dpi > 0 ? edit.dpi : undefined,
+    orient,
+  )
   const originalUrl = useObjectUrl(opened?.file)
   const resultUrl = useObjectUrl(state.out?.blob)
   const orientedUrl = useOrientedUrl(opened?.img, orient)

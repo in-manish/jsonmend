@@ -27,7 +27,10 @@ export interface ImagePrefs {
     quality: number
     lockRatio: boolean
     unit: ResizeUnit
-    /** Print resolution: converts inches / cm to pixels, and is written into JPEG / PNG files. */
+    /**
+     * Print resolution (dots per inch), written into JPG / PNG files and used for inches / cm.
+     * 0 = not set: files keep the browser's default and inches / cm assume 300.
+     */
     dpi: number
     target: TargetPrefs
   }
@@ -50,7 +53,7 @@ export const DEFAULT_PREFS: ImagePrefs = {
     quality: 80,
     lockRatio: true,
     unit: 'px',
-    dpi: 300,
+    dpi: 0,
     target: { ...target },
   },
   pdfToImages: { format: 'png', quality: 85, dpi: 150 },

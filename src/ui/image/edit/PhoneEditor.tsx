@@ -62,7 +62,9 @@ export function PhoneEditor({ s }: { s: EditorSession }) {
       />
     ),
     format: <FormatControls edit={edit} onChange={s.setEdit} />,
-    size: <TargetSizeControls target={edit.target} onChange={s.setTarget} />,
+    size: (
+      <TargetSizeControls target={edit.target} onChange={s.setTarget} originalBytes={img.bytes} />
+    ),
     info: (
       <>
         <div className="text-sm">
