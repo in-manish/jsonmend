@@ -3,6 +3,8 @@ import { pathFor, ROUTES } from '../routes'
 import { type Tool, useAppStore } from '../store/useAppStore'
 import App from './App'
 import { useTheme } from './hooks/useTheme'
+import { HtmlTool } from './html/HtmlTool'
+import { ImageTool } from './image/ImageTool'
 import { normalizeUrl, syncUrl, titleFor, toolFromLocation } from './navigation'
 import { PyIndentTool } from './pyindent/PyIndentTool'
 import { UrlTool } from './url/UrlTool'
@@ -11,6 +13,8 @@ const LABELS: Record<Tool, string> = {
   json: 'JSON formatter',
   url: 'URL encode / decode',
   py: 'Python indentation',
+  html: 'HTML formatter',
+  image: 'Image tools',
 }
 const TABS = ROUTES.map((r) => ({ id: r.tool, label: LABELS[r.tool] }))
 
@@ -56,7 +60,17 @@ export function Shell() {
         ))}
       </nav>
       <div className="min-h-0 flex-1">
-        {tool === 'json' ? <App /> : tool === 'url' ? <UrlTool /> : <PyIndentTool />}
+        {tool === 'json' ? (
+          <App />
+        ) : tool === 'url' ? (
+          <UrlTool />
+        ) : tool === 'html' ? (
+          <HtmlTool />
+        ) : tool === 'image' ? (
+          <ImageTool />
+        ) : (
+          <PyIndentTool />
+        )}
       </div>
     </div>
   )

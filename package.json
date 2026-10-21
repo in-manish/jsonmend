@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "biome check .",
+    "lint": "biome check . && node scripts/check-file-length.mjs",
     "preview": "vite preview",
     "format": "biome check --write .",
     "typecheck": "tsc -b",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-html": "^6.4.12",
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/lang-python": "^6.2.1",
     "@codemirror/language": "^6.12.4",
@@ -26,6 +27,7 @@
     "@uiw/react-codemirror": "^4.25.12",
     "comlink": "^4.4.2",
     "jsonrepair": "^3.15.0",
+    "pdfjs-dist": "^6.4.299",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zustand": "^5.0.15"

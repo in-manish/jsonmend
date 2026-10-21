@@ -24,7 +24,7 @@ repository settings, set **Pages > Source** to **GitHub Actions**. Publishing fr
 serves the unbuilt `index.html` and the page stays blank (`/src/main.tsx` fails with a MIME
 error). The custom domain lives in `public/CNAME` so it is copied into `dist/`.
 
-Each tool path (the root, `/json-formatter`, `/url-encode-decode`, `/python-indentation`) is built as its
+Each tool path (the root, `/json-formatter`, `/url-encode-decode`, `/python-indentation`, `/html-formatter`, `/image-tools`) is built as its
 own `index.html` (and `404.html` is a copy of the app), so deep links work without server
 rewrites. Add new routes in `src/routes.ts`.
 

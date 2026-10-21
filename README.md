@@ -31,6 +31,31 @@ can be copied, downloaded as `.py`, or copied as a `python3 -c "$(cat <<'PY' ...
 bash/zsh. It never touches strings, docstrings or bracket continuations, flags what it can't fix
 safely (missing block, unexpected indent), and does not check Python syntax.
 
+A fourth tab, **HTML formatter**, re-indents and re-wraps HTML and previews it in a sandboxed frame
+(no scripts, no network). With **Django / Jinja** mode (auto-detected, or set on/off), `{{ }}`,
+`{% %}` and `{# #}` are kept intact, even inside attributes, and checked: unclosed delimiters,
+unclosed or mismatched blocks (`if`/`for`/`block`/custom tags), stray `endif`, `else if`, typos and
+missing arguments are highlighted in the input with a suggested fix. Fixes only insert missing
+closers or repair typos, and apply with one click. Only whitespace is ever changed; the output is
+verified to contain exactly the input's content.
+
+In Preview, **Fill sample data** renders a Django / Jinja template with data inferred from how it
+uses its variables (`user.email`, `{% for order in orders %}` + `order.total`, `{% if is_staff %}`),
+chosen from the variable names. The data is editable JSON that merges over the generated values.
+It runs its own small renderer (if/elif/else, for/empty, with, set, common filters, `url`,
+`static`, `trans`); macros, custom tags and unknown filters are reported, nothing is executed.
+Preview can also show phone/tablet sizes and how Gmail would display the email.
+
+A fifth tab, **Image tools**, has three modes, all local (files are never uploaded):
+- **Resize, convert, compress**: shows the current size, resizes by pixels or percent (aspect ratio
+  lock, presets), converts between JPEG, PNG, WebP (and AVIF where the browser can encode it), and
+  compresses to a **target size in KB or MB (KB by default)** by searching quality and, if you allow
+  it, dimensions. Preview shows the original, the result or both, with the calculated output size.
+- **PDF to images**: renders pages (all, or a range like `1-3, 5`) at 72-300 dpi as PNG/JPEG/WebP,
+  with per-page download and a ZIP.
+- **Images to PDF**: combines images in the order you set, with page size (fit, A4, Letter),
+  margins, quality and an optional PDF size target.
+
 Each tool has its own URL, so a link opens the tool it was copied from:
 
 | Tool | URL |
@@ -38,6 +63,8 @@ Each tool has its own URL, so a link opens the tool it was copied from:
 | JSON formatter | `/` (also `/json-formatter`, `/json-parser`) |
 | URL encode / decode | `/url-encode-decode` |
 | Python indentation | `/python-indentation` |
+| HTML formatter | `/html-formatter` |
+| Image tools | `/image-tools` |
 
 The root `/` opens the JSON formatter and its URL is left alone. Switching tabs updates the
 address bar (the JSON tab goes back to `/`) and Back/Forward work. JSON share links look like `/#input=...`.

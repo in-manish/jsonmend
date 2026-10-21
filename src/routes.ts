@@ -2,7 +2,7 @@
  * One URL per tool, so a link opens the tool it was copied from. Pure data and functions (no DOM,
  * no imports) because vite.config.ts also reads it to emit a static page per route.
  */
-export type Tool = 'json' | 'url' | 'py'
+export type Tool = 'json' | 'url' | 'py' | 'html' | 'image'
 
 export interface Route {
   tool: Tool
@@ -38,6 +38,31 @@ export const ROUTES: Route[] = [
     description:
       'Fix Python tabs, mixed whitespace and wrong indent sizes, then copy code that runs in your terminal. Runs in your browser.',
     aliases: ['python', 'py', 'python-indent'],
+  },
+  {
+    tool: 'html',
+    slug: 'html-formatter',
+    title: 'HTML formatter and preview',
+    description:
+      'Format and preview HTML, with Django and Jinja template support: tags stay intact, errors are highlighted and fixes suggested. Runs in your browser.',
+    aliases: ['html', 'html-preview', 'html-beautifier', 'django-template-formatter'],
+  },
+  {
+    tool: 'image',
+    slug: 'image-tools',
+    title: 'Image resizer, converter and PDF tools',
+    description:
+      'Resize, compress to a target size, and convert images between JPEG, PNG and WebP; turn PDF pages into images and images into a PDF. Runs in your browser; files are never uploaded.',
+    aliases: [
+      'image',
+      'image-resizer',
+      'image-converter',
+      'image-compressor',
+      'resize-image',
+      'compress-image',
+      'pdf-to-image',
+      'image-to-pdf',
+    ],
   },
 ]
 

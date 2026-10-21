@@ -1,8 +1,9 @@
 # Security headers for Cloudflare Pages / Netlify (same format on both).
 # The app makes no network requests: connect-src is 'none', so pasted data cannot leave the browser.
+# img-src allows blob: so the image tools can preview files you opened (local only, never fetched).
 # style-src needs 'unsafe-inline' because CodeMirror injects its stylesheet at runtime.
 /*
-  Content-Security-Policy: default-src 'none'; script-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   Referrer-Policy: no-referrer
   X-Content-Type-Options: nosniff
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()

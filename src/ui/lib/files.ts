@@ -1,6 +1,6 @@
-/** Saves text as a file through a temporary object URL. */
-export function download(text: string, filename: string, type = 'application/json') {
-  const url = URL.createObjectURL(new Blob([text], { type }))
+/** Saves a blob as a file through a temporary object URL. */
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = filename
@@ -8,6 +8,11 @@ export function download(text: string, filename: string, type = 'application/jso
   a.click()
   a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+/** Saves text as a file. */
+export function download(text: string, filename: string, type = 'application/json') {
+  downloadBlob(new Blob([text], { type }), filename)
 }
 
 export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024
