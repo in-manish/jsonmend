@@ -1,42 +1,5 @@
-import { expect, type Page, test } from '@playwright/test'
-
-/** A noisy (so it compresses meaningfully) image made in the page, returned as a file payload. */
-async function makeImage(page: Page, name: string, w: number, h: number, type: string) {
-  const base64 = await page.evaluate(
-    async ([w, h, type]) => {
-      const c = document.createElement('canvas')
-      c.width = w as number
-      c.height = h as number
-      const ctx = c.getContext('2d') as CanvasRenderingContext2D
-      const data = ctx.createImageData(c.width, c.height)
-      for (let i = 0; i < data.data.length; i += 4) {
-        const v = (i / 4) % 251
-        data.data[i] = v
-        data.data[i + 1] = (v * 7) % 256
-        data.data[i + 2] = Math.floor(Math.random() * 256)
-        data.data[i + 3] = 255
-      }
-      ctx.putImageData(data, 0, 0)
-      const blob: Blob = await new Promise((r) =>
-        c.toBlob((b) => r(b as Blob), type as string, 0.95),
-      )
-      const buf = new Uint8Array(await blob.arrayBuffer())
-      let s = ''
-      for (const b of buf) s += String.fromCharCode(b)
-      return btoa(s)
-    },
-    [w, h, type] as const,
-  )
-  return { name, mimeType: type, buffer: Buffer.from(base64, 'base64') }
-}
-
-const readDownload = async (page: Page, click: () => Promise<void>) => {
-  const [download] = await Promise.all([page.waitForEvent('download'), click()])
-  const stream = await download.createReadStream()
-  const chunks: Buffer[] = []
-  for await (const c of stream) chunks.push(c as Buffer)
-  return { name: download.suggestedFilename(), data: Buffer.concat(chunks) }
-}
+import { expect, test } from '@playwright/test'
+import { makeImage, makeQuadrants, pixelAt, readDownload } from './imageHelpers'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/image-tools')
@@ -57,7 +20,7 @@ test('resizes with a locked ratio, converts, and compresses to a target size in 
   await expect(page.getByLabel('Height', { exact: true })).toHaveValue('400')
 
   await page.getByLabel('Format').selectOption('webp')
-  await expect(page.getByLabel('Size unit')).toHaveValue('kb')
+  await expect(page.getByLabel('Size unit', { exact: true })).toHaveValue('kb')
   await page.getByLabel('Compress the image to a target size').check()
   await page.getByLabel('Target', { exact: true }).fill('40')
 
@@ -133,4 +96,138 @@ test('images become a PDF, and that PDF converts back to page images and a ZIP',
   expect(zip.data.toString('latin1')).toContain('doc-page-2.png')
 
   expect(problems.filter((p) => /Content Security Policy|Refused/i.test(p))).toEqual([])
+})
+
+test('inches and centimetres convert at the chosen dpi and tag the saved JPEG', async ({
+  page,
+}) => {
+  await page
+    .getByRole('tabpanel')
+    .getByTestId('file-input')
+    .setInputFiles(await makeImage(page, 'p.png', 1200, 900, 'image/png'))
+  await expect(page.getByText('PNG · 1200×900')).toBeVisible()
+  await page.getByLabel('Print resolution').selectOption('300')
+
+  await page.getByRole('tab', { name: 'Inches' }).click()
+  await expect(page.getByLabel('Width', { exact: true })).toHaveValue('4')
+  await page.getByLabel('Width', { exact: true }).fill('2')
+  await expect(page.getByLabel('Height', { exact: true })).toHaveValue('1.5')
+  await expect(page.getByTestId('print-size')).toContainText(
+    '600×450 px = 2×1.5 in = 5.08×3.81 cm at 300 dpi',
+  )
+
+  await page.getByRole('tab', { name: 'cm' }).click()
+  await expect(page.getByLabel('Width', { exact: true })).toHaveValue('5.08')
+  await page.getByLabel('Width', { exact: true }).fill('10')
+  await expect(page.getByTestId('print-size')).toContainText('1181×886 px')
+
+  // Changing dpi keeps the physical size, so the pixels follow.
+  await page.getByLabel('Print resolution').selectOption('150')
+  await expect(page.getByTestId('print-size')).toContainText('591×443 px')
+
+  const file = await readDownload(page, () =>
+    page.getByRole('button', { name: /Download JPEG/ }).click(),
+  )
+  // JFIF header: units = 1 (dpi), density = 150.
+  expect(file.data[13]).toBe(1)
+  expect(file.data.readUInt16BE(14)).toBe(150)
+})
+
+test('dragging on the image crops it; the crop feeds the resize and the output', async ({
+  page,
+}) => {
+  await page
+    .getByRole('tabpanel')
+    .getByTestId('file-input')
+    .setInputFiles(await makeImage(page, 'c.png', 1000, 800, 'image/png'))
+  await expect(page.getByText('PNG · 1000×800')).toBeVisible()
+
+  // Tapping the preview image enters crop mode.
+  await page.getByRole('button', { name: /Resized image preview: tap to crop/ }).click()
+  const frame = page.getByTestId('crop-frame')
+  await expect(frame).toBeVisible()
+
+  const box = (await frame.boundingBox()) as { x: number; y: number; width: number; height: number }
+  await page.mouse.move(box.x + box.width * 0.25, box.y + box.height * 0.25)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.75, { steps: 6 })
+  await page.mouse.up()
+  await expect(page.getByTestId('crop-rect')).toBeVisible()
+  await expect(
+    page.getByRole('status').filter({ hasText: /^Keeping \d+×\d+ px of 1000×800/ }),
+  ).toBeVisible()
+
+  // Exact numbers and a ratio.
+  await page.getByRole('tab', { name: '1:1' }).click()
+  const visible = (label: string) =>
+    page.getByRole('region', { name: 'Crop controls' }).getByLabel(label, { exact: true })
+  await expect
+    .poll(
+      async () => (await visible('Width').inputValue()) === (await visible('Height').inputValue()),
+    )
+    .toBe(true)
+  const w = Number(await visible('Width').inputValue())
+
+  await page.getByRole('button', { name: 'Apply crop' }).click()
+  await expect(
+    page.getByRole('region', { name: 'Image settings' }).or(page.getByLabel('Image settings')),
+  ).toBeVisible()
+  await expect(page.getByTestId('action-size')).toContainText(`${w}×${w}`, { timeout: 15000 })
+
+  // Resizing is relative to the kept region.
+  await page.getByRole('button', { name: '50%' }).click()
+  await expect(page.getByTestId('action-size')).toContainText(`${Math.round(w / 2)}×`, {
+    timeout: 15000,
+  })
+
+  // Removing the crop restores the whole image.
+  await page.getByRole('button', { name: 'Remove crop' }).click()
+  await expect(page.getByTestId('action-size')).toContainText('1000×800', { timeout: 15000 })
+})
+
+test('rotate and flip change the output pixels and swap the size; crop follows what you see', async ({
+  page,
+}) => {
+  await page
+    .getByRole('tabpanel')
+    .getByTestId('file-input')
+    .setInputFiles(await makeQuadrants(page, 'q.png', 400, 200))
+  await expect(page.getByText('PNG · 400×200')).toBeVisible()
+  await page.getByLabel('Format').selectOption('png')
+
+  await page.getByRole('button', { name: 'Rotate right' }).click()
+  await expect(page.getByTestId('orientation-state')).toHaveText('rotated 90° clockwise')
+  await expect(page.getByTestId('action-size')).toContainText('200×400', { timeout: 15000 })
+
+  // After a clockwise quarter turn the red top-left quadrant is at the top-right.
+  const turned = await readDownload(page, () =>
+    page.getByRole('button', { name: /Download PNG/ }).click(),
+  )
+  expect(await pixelAt(page, turned.data, 190, 10)).toEqual([255, 0, 0])
+  expect(await pixelAt(page, turned.data, 10, 10)).toEqual([0, 0, 255])
+
+  // Flipping left-right on top of that moves red to the top-left.
+  await page.getByRole('button', { name: 'Flip horizontal' }).click()
+  await expect(page.getByTestId('orientation-state')).toHaveText(
+    'rotated 90° clockwise, flipped left-right',
+  )
+  const flipped = await readDownload(page, () =>
+    page.getByRole('button', { name: /Download PNG/ }).click(),
+  )
+  expect(await pixelAt(page, flipped.data, 10, 10)).toEqual([255, 0, 0])
+
+  // Cropping uses the turned picture: its size is 200×400.
+  await page.getByRole('button', { name: 'Crop image' }).click()
+  await expect(page.getByTestId('crop-frame')).toBeVisible()
+  await page.getByRole('button', { name: 'Select all' }).click()
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Keeping 200×400 px of 200×400' }),
+  ).toBeVisible()
+  await page.getByRole('tab', { name: '1:1' }).click()
+  await page.getByRole('button', { name: 'Apply crop' }).click()
+  await expect(page.getByTestId('action-size')).toContainText('200×200', { timeout: 15000 })
+
+  await page.getByRole('button', { name: 'Reset orientation' }).click()
+  await expect(page.getByTestId('orientation-state')).toHaveText('original orientation')
+  await expect(page.getByTestId('action-size')).toContainText('200×200', { timeout: 15000 })
 })

@@ -47,8 +47,11 @@ It runs its own small renderer (if/elif/else, for/empty, with, set, common filte
 Preview can also show phone/tablet sizes and how Gmail would display the email.
 
 A fifth tab, **Image tools**, has three modes, all local (files are never uploaded):
-- **Resize, convert, compress**: shows the current size, resizes by pixels or percent (aspect ratio
-  lock, presets), converts between JPEG, PNG, WebP (and AVIF where the browser can encode it), and
+- **Resize, convert, compress**: built phone first (preview pinned on top, collapsible controls,
+  44 px tap targets, Download always in reach). Shows the current size; **tap the image to crop**
+  it (drag to draw, drag the box or its handles, aspect presets, exact numbers); **rotate** in
+  90° steps and **flip**; resizes by pixels, percent, **inches or cm** at a chosen dpi (JPEG and
+  PNG files are tagged with that dpi), with an aspect ratio lock and presets; converts between JPEG, PNG, WebP (and AVIF where the browser can encode it), and
   compresses to a **target size in KB or MB (KB by default)** by searching quality and, if you allow
   it, dimensions. Preview shows the original, the result or both, with the calculated output size.
 - **PDF to images**: renders pages (all, or a range like `1-3, 5`) at 72-300 dpi as PNG/JPEG/WebP,

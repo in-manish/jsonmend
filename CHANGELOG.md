@@ -21,7 +21,7 @@ First release.
   every type conversion.
 
 ### App
-- Image tools tab: resize, convert and compress to a target size; PDF to images; images to PDF (`src/core/image`, `src/ui/image`). The CSP gained `img-src blob:` for local previews.
+- Image tools tab: resize, convert and compress to a target size; PDF to images; images to PDF (`src/core/image`, `src/ui/image`), with tap-to-crop, rotate / flip, inches and cm at a chosen dpi (written into JPEG / PNG), and a phone-first layout. The CSP gained `img-src blob:` for local previews.
 - HTML formatter tab with sandboxed preview and Django / Jinja template checking (`src/core/html`, `src/ui/html`).
 - Two CodeMirror 6 panes (stacked on phones), formatting in a Web Worker with cancellation.
 - Lint markers on the input, highlighted repairs in the output, report panel with jump-to-location

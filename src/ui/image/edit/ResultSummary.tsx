@@ -11,7 +11,6 @@ interface Props {
   dims: Dim
   edit: ImagePrefs['edit']
   state: EncodeState
-  onDownload(): void
 }
 
 const Row = ({ k, v, strong }: { k: string; v: string; strong?: boolean }) => (
@@ -22,7 +21,7 @@ const Row = ({ k, v, strong }: { k: string; v: string; strong?: boolean }) => (
 )
 
 /** Original vs result: dimensions, calculated file size, saving, and whether the limit was met. */
-export function ResultSummary({ img, dims, edit, state, onDownload }: Props) {
+export function ResultSummary({ img, dims, edit, state }: Props) {
   const { out } = state
   const working = state.status === 'working'
   const original = { width: img.width, height: img.height }
@@ -33,7 +32,6 @@ export function ResultSummary({ img, dims, edit, state, onDownload }: Props) {
 
   return (
     <section aria-label="Result" className="flex flex-col gap-2">
-      <h3 className="pane-title !px-0">Result</h3>
       <dl className="flex flex-col gap-0.5 text-sm">
         <Row
           k="Original"
@@ -82,9 +80,6 @@ export function ResultSummary({ img, dims, edit, state, onDownload }: Props) {
         </p>
       )}
       {state.status === 'error' && <p className="text-sm text-[var(--error)]">{state.error}</p>}
-      <button type="button" className="btn" disabled={!out || working} onClick={onDownload}>
-        Download {LABEL[edit.format]}
-      </button>
     </section>
   )
 }

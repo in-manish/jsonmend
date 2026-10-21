@@ -1,9 +1,13 @@
 import { create } from 'zustand'
+import type { PhysicalUnit } from '../../core/image/dims'
 import type { PageSize } from '../../core/image/pdfWriter'
 import type { SizeUnit } from '../../core/image/size'
 import { autosave, loadSaved, SAVE_FAILED } from '../../store/autosave'
 import { useAppStore } from '../../store/useAppStore'
 import type { OutFormat } from './lib/canvas'
+
+/** How the resize fields are expressed. */
+export type ResizeUnit = 'px' | 'percent' | PhysicalUnit
 
 export type ImageMode = 'edit' | 'pdf-to-images' | 'images-to-pdf'
 
@@ -22,6 +26,9 @@ export interface ImagePrefs {
     /** 1-100. */
     quality: number
     lockRatio: boolean
+    unit: ResizeUnit
+    /** Print resolution: converts inches / cm to pixels, and is written into JPEG / PNG files. */
+    dpi: number
     target: TargetPrefs
   }
   pdfToImages: { format: OutFormat; quality: number; dpi: number }
@@ -38,7 +45,14 @@ const target: TargetPrefs = { on: false, value: 200, unit: 'kb', allowScale: tru
 
 export const DEFAULT_PREFS: ImagePrefs = {
   mode: 'edit',
-  edit: { format: 'jpeg', quality: 80, lockRatio: true, target: { ...target } },
+  edit: {
+    format: 'jpeg',
+    quality: 80,
+    lockRatio: true,
+    unit: 'px',
+    dpi: 300,
+    target: { ...target },
+  },
   pdfToImages: { format: 'png', quality: 85, dpi: 150 },
   imagesToPdf: { size: 'a4', margin: 20, orientation: 'auto', quality: 85, target: { ...target } },
 }

@@ -68,7 +68,7 @@ export function ImagesToPdf() {
 
   if (items.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center p-4">
+      <div className="image-tool flex h-full items-center justify-center p-4">
         <div className="w-full max-w-xl">
           <DropZone
             multiple
@@ -84,10 +84,10 @@ export function ImagesToPdf() {
   }
 
   return (
-    <div className="flex h-full flex-col md:flex-row">
+    <div className="image-tool flex h-full flex-col overflow-y-auto md:flex-row md:overflow-hidden">
       <aside
         aria-label="PDF settings"
-        className="flex max-h-[55%] w-full flex-none flex-col gap-4 overflow-y-auto border-b border-[var(--border)] bg-[var(--panel)] p-3 md:max-h-none md:w-80 md:border-r md:border-b-0"
+        className="flex w-full flex-none flex-col gap-4 border-b border-[var(--border)] bg-[var(--panel)] p-3 md:h-full md:w-80 md:overflow-y-auto md:border-r md:border-b-0"
       >
         <DropZone
           compact
@@ -206,7 +206,7 @@ export function ImagesToPdf() {
           </button>
         </section>
       </aside>
-      <div className="min-h-0 min-w-0 flex-1 overflow-auto">
+      <div className="min-w-0 flex-none md:min-h-0 md:flex-1 md:overflow-auto">
         <PageList
           items={items}
           options={options}

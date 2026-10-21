@@ -16,8 +16,7 @@ export function FormatControls({ edit, onChange }: Props) {
   const lossy = isLossy(edit.format)
 
   return (
-    <fieldset className="flex flex-col gap-2 border-0 p-0">
-      <legend className="pane-title !px-0">Format and quality</legend>
+    <div className="flex flex-col gap-2">
       <label className="flex items-center gap-2 text-sm">
         <span className="w-14 flex-none text-[var(--muted)]">Format</span>
         <select
@@ -57,6 +56,6 @@ export function FormatControls({ edit, onChange }: Props) {
           JPEG has no transparency: it is filled with white.
         </p>
       )}
-    </fieldset>
+    </div>
   )
 }

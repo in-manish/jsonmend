@@ -1,3 +1,6 @@
+import type { Rect } from '../../../core/image/crop'
+import { type Orientation, orientMatrix, swapsAxes } from '../../../core/image/orient'
+
 /** Browser image plumbing: decode a file, draw it at a size, encode it. Everything stays local. */
 
 export type OutFormat = 'jpeg' | 'png' | 'webp' | 'avif'
@@ -56,12 +59,18 @@ export async function loadImage(file: File): Promise<Loaded> {
   }
 }
 
-/** Draws `source` at the given size; `flatten` paints white first (JPEG has no transparency). */
+/**
+ * Draws `source` (or just its `crop` region, in source pixels) at the given size. `flatten` paints
+ * white first, because JPEG has no transparency.
+ */
 export function draw(
   source: CanvasImageSource,
   width: number,
   height: number,
   flatten: boolean,
+  crop?: Rect,
+  /** Turn / flip the picture; `width` × `height` are then the size after turning. */
+  orient?: Orientation,
 ): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -73,7 +82,11 @@ export function draw(
     ctx.fillRect(0, 0, width, height)
   }
   ctx.imageSmoothingQuality = 'high'
-  ctx.drawImage(source, 0, 0, width, height)
+  // The picture is drawn at its pre-turn size; the transform turns it into the canvas.
+  const [dw, dh] = orient && swapsAxes(orient) ? [height, width] : [width, height]
+  if (orient) ctx.setTransform(...orientMatrix(orient, dw, dh))
+  if (crop) ctx.drawImage(source, crop.x, crop.y, crop.w, crop.h, 0, 0, dw, dh)
+  else ctx.drawImage(source, 0, 0, dw, dh)
   return canvas
 }
 

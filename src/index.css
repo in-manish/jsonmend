@@ -55,7 +55,8 @@ body {
   .btn {
     @apply rounded-md border border-[var(--border)] bg-[var(--panel)] px-2.5 py-1 text-sm hover:border-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50;
   }
-  .btn[aria-pressed="true"] {
+  .btn[aria-pressed="true"],
+  .btn[aria-selected="true"] {
     @apply border-[var(--accent)] text-[var(--accent)];
   }
   .btn-primary {
@@ -292,4 +293,32 @@ body {
     0 8px,
     8px -8px,
     -8px 0;
+}
+
+/*
+ * Image tools are phone first: comfortable tap targets and 16px fields (iOS zooms smaller ones)
+ * by default, tightened again on wide screens with a fine pointer.
+ */
+.image-tool .btn,
+.image-tool .input-sm {
+  min-height: 2.75rem;
+  font-size: 1rem;
+}
+.image-tool .input-sm {
+  padding-inline: 0.5rem;
+}
+.image-tool input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+@media (min-width: 768px) and (pointer: fine) {
+  .image-tool .btn,
+  .image-tool .input-sm {
+    min-height: 0;
+    font-size: 0.875rem;
+  }
+  .image-tool input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+  }
 }

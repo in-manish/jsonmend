@@ -15,7 +15,7 @@ export function ImageTool() {
   const mode = useImageStore((s) => s.prefs.mode)
   const setMode = useImageStore((s) => s.setMode)
   return (
-    <div className="flex h-full flex-col">
+    <div className="image-tool flex h-full flex-col">
       <div
         role="tablist"
         aria-label="Image tool mode"

@@ -29,3 +29,20 @@ export const scaleDim = (d: Dim, scale: number): Dim => ({
 /** Rough output size before encoding: the original size scaled by the change in pixel count. */
 export const estimateBytes = (originalBytes: number, from: Dim, to: Dim): number =>
   Math.max(1, Math.round((originalBytes * (to.width * to.height)) / (from.width * from.height)))
+
+/** Inches <-> pixels at a print resolution (dots per inch). */
+export const inchesToPx = (inches: number, dpi: number): number => clamp(inches * dpi)
+export const pxToInches = (px: number, dpi: number): number => Math.round((px / dpi) * 100) / 100
+
+/** Physical lengths for print size. */
+export type PhysicalUnit = 'in' | 'cm'
+
+const CM_PER_INCH = 2.54
+
+/** A length in inches or centimetres to pixels at `dpi`. */
+export const physicalToPx = (value: number, unit: PhysicalUnit, dpi: number): number =>
+  clamp((unit === 'cm' ? value / CM_PER_INCH : value) * dpi)
+
+/** Pixels to inches or centimetres at `dpi`, to two decimals. */
+export const pxToPhysical = (px: number, unit: PhysicalUnit, dpi: number): number =>
+  Math.round((px / dpi) * (unit === 'cm' ? CM_PER_INCH : 1) * 100) / 100
