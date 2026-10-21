@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { SizeUnit } from '../../core/image/size'
 import { NumField } from './NumField'
 import type { TargetPrefs } from './useImageStore'
@@ -5,54 +6,98 @@ import type { TargetPrefs } from './useImageStore'
 interface Props {
   target: TargetPrefs
   onChange(patch: Partial<TargetPrefs>): void
-  /** Wording for what shrinks, e.g. "image" or "PDF". */
+  /** Wording for what shrinks, e.g. "photo" or "PDF". */
   what?: string
 }
 
-/** "Limit file size" with a number and a KB / MB unit (KB by default). */
-export function TargetSizeControls({ target, onChange, what = 'image' }: Props) {
+/** The limits upload forms usually ask for. */
+const LIMITS: { value: number; unit: SizeUnit }[] = [
+  { value: 100, unit: 'kb' },
+  { value: 200, unit: 'kb' },
+  { value: 500, unit: 'kb' },
+  { value: 1, unit: 'mb' },
+]
+const text = (l: { value: number; unit: SizeUnit }) => `${l.value} ${l.unit.toUpperCase()}`
+
+/** "Keep under": one tap for the usual upload limits, or a custom number in KB (default) / MB. */
+export function TargetSizeControls({ target, onChange, what = 'photo' }: Props) {
+  const matches = (l: { value: number; unit: SizeUnit }) =>
+    target.on && target.value === l.value && target.unit === l.unit
+  const [custom, setCustom] = useState(() => target.on && !LIMITS.some(matches))
+  const showCustom = custom || (target.on && !LIMITS.some(matches))
+
   return (
     <div className="flex flex-col gap-2">
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={target.on}
-          onChange={(e) => onChange({ on: e.target.checked })}
-        />
-        Compress the {what} to a target size
-      </label>
-      <div className="flex items-center gap-1">
-        <NumField
-          label="Target"
-          value={target.value}
-          min={0.01}
-          step={target.unit === 'mb' ? 0.1 : 10}
-          disabled={!target.on}
-          onCommit={(value) => onChange({ value })}
-        />
-        <select
-          className="input-sm"
-          aria-label="Size unit"
-          value={target.unit}
-          disabled={!target.on}
-          onChange={(e) => onChange({ unit: e.target.value as SizeUnit })}
+      <fieldset className="m-0 flex flex-wrap gap-1.5 border-0 p-0" aria-label="Keep under">
+        <button
+          type="button"
+          className="btn crop-chip"
+          aria-pressed={!target.on}
+          onClick={() => {
+            setCustom(false)
+            onChange({ on: false })
+          }}
         >
-          <option value="kb">KB</option>
-          <option value="mb">MB</option>
-        </select>
-      </div>
-      <label
-        className="flex items-center gap-2 text-sm"
-        title="If quality alone cannot reach the target, shrink the pixel dimensions too"
-      >
-        <input
-          type="checkbox"
-          checked={target.allowScale}
-          disabled={!target.on}
-          onChange={(e) => onChange({ allowScale: e.target.checked })}
-        />
-        Reduce dimensions if needed
-      </label>
+          No limit
+        </button>
+        {LIMITS.map((l) => (
+          <button
+            key={text(l)}
+            type="button"
+            className="btn crop-chip"
+            aria-label={`Under ${text(l)}`}
+            aria-pressed={matches(l)}
+            onClick={() => {
+              setCustom(false)
+              onChange({ on: true, value: l.value, unit: l.unit })
+            }}
+          >
+            {text(l)}
+          </button>
+        ))}
+        <button
+          type="button"
+          className="btn crop-chip"
+          aria-pressed={showCustom}
+          onClick={() => {
+            setCustom(true)
+            onChange({ on: true })
+          }}
+        >
+          Other
+        </button>
+      </fieldset>
+
+      {showCustom && (
+        <>
+          <div className="flex items-center gap-1">
+            <NumField
+              label="Limit"
+              value={target.value}
+              min={0.01}
+              step={target.unit === 'mb' ? 0.1 : 10}
+              onCommit={(value) => onChange({ on: true, value })}
+            />
+            <select
+              className="input-sm"
+              aria-label="Size unit"
+              value={target.unit}
+              onChange={(e) => onChange({ on: true, unit: e.target.value as SizeUnit })}
+            >
+              <option value="kb">KB</option>
+              <option value="mb">MB</option>
+            </select>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={target.allowScale}
+              onChange={(e) => onChange({ allowScale: e.target.checked })}
+            />
+            Shrink the {what} too if needed
+          </label>
+        </>
+      )}
     </div>
   )
 }

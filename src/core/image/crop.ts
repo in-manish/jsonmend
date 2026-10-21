@@ -165,14 +165,14 @@ export function defaultRect(b: Bounds, aspect?: number): Rect {
 
 export const CROP_PRESETS: { id: string; label: string; ratio: number | 'original' | undefined }[] =
   [
-    { id: 'free', label: 'Free', ratio: undefined },
+    { id: 'free', label: 'Any shape', ratio: undefined },
     { id: 'original', label: 'Original', ratio: 'original' },
-    { id: '1:1', label: '1:1', ratio: 1 },
+    { id: '1:1', label: 'Square 1:1', ratio: 1 },
     { id: '4:3', label: '4:3', ratio: 4 / 3 },
     { id: '3:4', label: '3:4', ratio: 3 / 4 },
     { id: '3:2', label: '3:2', ratio: 3 / 2 },
-    { id: '16:9', label: '16:9', ratio: 16 / 9 },
-    { id: '9:16', label: '9:16', ratio: 9 / 16 },
+    { id: '16:9', label: 'Wide 16:9', ratio: 16 / 9 },
+    { id: '9:16', label: 'Story 9:16', ratio: 9 / 16 },
   ]
 
 export const presetAspect = (id: string, b: Bounds): number | undefined => {

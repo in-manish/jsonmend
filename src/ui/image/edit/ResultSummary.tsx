@@ -71,11 +71,11 @@ export function ResultSummary({ img, dims, edit, state }: Props) {
           style={{ color: out.met ? 'var(--info)' : 'var(--error)' }}
         >
           {out.met
-            ? `Within the ${formatBytes(targetBytes)} target (${formatBytes(out.blob.size)}).`
-            : `Could not reach ${formatBytes(targetBytes)}: smallest is ${formatBytes(out.blob.size)}.${
+            ? `Done: ${formatBytes(out.blob.size)}, under your ${formatBytes(targetBytes)} limit.`
+            : `Could not get under ${formatBytes(targetBytes)}: the smallest was ${formatBytes(out.blob.size)}.${
                 target.allowScale
-                  ? ' Try a smaller dimension, WebP or JPEG.'
-                  : ' Turn on "Reduce dimensions if needed".'
+                  ? ' Try a smaller size in Resize, or save as WebP or JPG.'
+                  : ' Allow making the photo smaller in File size.'
               }`}
         </p>
       )}

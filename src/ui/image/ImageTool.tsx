@@ -4,10 +4,10 @@ import { ImagesToPdf } from './pdf/ImagesToPdf'
 import { PdfToImages } from './pdf/PdfToImages'
 import { type ImageMode, useImageStore } from './useImageStore'
 
-const MODES: { id: ImageMode; label: string }[] = [
-  { id: 'edit', label: 'Resize, convert, compress' },
-  { id: 'pdf-to-images', label: 'PDF to images' },
-  { id: 'images-to-pdf', label: 'Images to PDF' },
+const MODES: { id: ImageMode; label: string; short: string }[] = [
+  { id: 'edit', label: 'Resize, convert, compress', short: 'Edit photo' },
+  { id: 'pdf-to-images', label: 'PDF to images', short: 'PDF → image' },
+  { id: 'images-to-pdf', label: 'Images to PDF', short: 'Image → PDF' },
 ]
 
 /** Image tools: edit one image, turn PDF pages into images, or combine images into a PDF. */
@@ -19,7 +19,7 @@ export function ImageTool() {
       <div
         role="tablist"
         aria-label="Image tool mode"
-        className="flex gap-1 overflow-x-auto border-b border-[var(--border)] bg-[var(--panel)] px-3 py-2 [&>*]:shrink-0"
+        className="mode-tabs flex gap-1 overflow-x-auto border-b border-[var(--border)] bg-[var(--panel)] px-2 py-1.5 md:px-3 md:py-2 [&>*]:shrink-0"
       >
         {MODES.map((m) => (
           <button
@@ -33,10 +33,11 @@ export function ImageTool() {
             }
             onClick={() => setMode(m.id)}
           >
-            {m.label}
+            <span className="md:hidden">{m.short}</span>
+            <span className="hidden md:inline">{m.label}</span>
           </button>
         ))}
-        <span className="ml-2 self-center text-xs text-[var(--muted)]">
+        <span className="ml-2 hidden self-center text-xs text-[var(--muted)] md:inline">
           Everything runs in your browser; files are never uploaded.
         </span>
       </div>

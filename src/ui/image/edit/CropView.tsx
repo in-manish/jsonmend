@@ -19,12 +19,17 @@ interface Props {
   applied: Rect | undefined
   onApply(rect: Rect | undefined): void
   onCancel(): void
+  /** Phones: start from the whole picture, keep the bar short, numbers behind a toggle. */
+  compact?: boolean
 }
 
 /** Crop mode: the image with its overlay, aspect presets, exact numbers, and Apply / Cancel. */
-export function CropView({ src, width, height, applied, onApply, onCancel }: Props) {
+export function CropView({ src, width, height, applied, onApply, onCancel, compact }: Props) {
   const bounds = { width, height }
-  const [rect, setRect] = useState<Rect | undefined>(applied)
+  const [rect, setRect] = useState<Rect | undefined>(
+    applied ?? (compact ? fullRect({ width, height }) : undefined),
+  )
+  const [exact, setExact] = useState(!compact)
   const [preset, setPreset] = useState('free')
   const aspect = presetAspect(preset, bounds)
 
@@ -62,7 +67,7 @@ export function CropView({ src, width, height, applied, onApply, onCancel }: Pro
       >
         <p className="text-xs text-[var(--muted)]" role="status">
           {rect
-            ? `Keeping ${rect.w}×${rect.h} px of ${width}×${height}. Drag inside to move, drag a handle to resize.`
+            ? `Keeping ${rect.w}×${rect.h} px of ${width}×${height}.${compact ? ' Drag the corners to choose what to keep.' : ' Drag inside to move, drag a handle to resize.'}`
             : 'Tap the image for a starting box, or press and drag to draw one.'}
         </p>
         <div
@@ -76,43 +81,79 @@ export function CropView({ src, width, height, applied, onApply, onCancel }: Pro
               type="button"
               role="tab"
               aria-selected={preset === p.id}
-              className="btn"
+              className={compact ? 'btn crop-chip' : 'btn'}
               onClick={() => choose(p.id)}
             >
               {p.label}
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-          {field('x', width)}
-          {field('y', height)}
-          {field('w', width)}
-          {field('h', height)}
-        </div>
-        <div className="flex flex-wrap gap-1">
+        {compact && (
           <button
             type="button"
-            className="btn btn-primary"
-            disabled={!rect}
-            onClick={() => onApply(rect)}
+            className="self-start text-sm text-[var(--accent)]"
+            aria-expanded={exact}
+            onClick={() => setExact(!exact)}
           >
-            Apply crop
+            {exact ? 'Hide exact size' : 'Exact size…'}
           </button>
-          <button type="button" className="btn" onClick={() => setRect(fullRect(bounds))}>
-            Select all
-          </button>
-          <button
-            type="button"
-            className="btn"
-            disabled={!applied}
-            onClick={() => onApply(undefined)}
-          >
-            Remove crop
-          </button>
-          <button type="button" className="btn" onClick={onCancel}>
-            Cancel
-          </button>
-        </div>
+        )}
+        {exact && (
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+            {field('x', width)}
+            {field('y', height)}
+            {field('w', width)}
+            {field('h', height)}
+          </div>
+        )}
+        {compact ? (
+          <div className="flex items-center gap-2">
+            <button type="button" className="btn" onClick={onCancel}>
+              Cancel
+            </button>
+            <button type="button" className="btn" onClick={() => setRect(fullRect(bounds))}>
+              Whole photo
+            </button>
+            {applied && (
+              <button type="button" className="btn" onClick={() => onApply(undefined)}>
+                Remove crop
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn btn-primary ml-auto px-5"
+              disabled={!rect}
+              onClick={() => onApply(rect)}
+            >
+              Apply crop
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={!rect}
+              onClick={() => onApply(rect)}
+            >
+              Apply crop
+            </button>
+            <button type="button" className="btn" onClick={() => setRect(fullRect(bounds))}>
+              Whole photo
+            </button>
+            <button
+              type="button"
+              className="btn"
+              disabled={!applied}
+              onClick={() => onApply(undefined)}
+            >
+              Remove crop
+            </button>
+            <button type="button" className="btn" onClick={onCancel}>
+              Cancel
+            </button>
+          </div>
+        )}
       </section>
     </div>
   )

@@ -7,54 +7,66 @@ interface Props {
   onChange(patch: Partial<ImagePrefs['edit']>): void
 }
 
+/** What each file type is for, in two words. */
+const FOR: Record<OutFormat, string> = {
+  jpeg: 'Photos',
+  png: 'Screenshots',
+  webp: 'Smallest',
+  avif: 'Smallest, newer',
+}
+
+/** "Save as": file type, then one quality slider. */
 export function FormatControls({ edit, onChange }: Props) {
   const [avif, setAvif] = useState(false)
   useEffect(() => {
     supportsAvif().then(setAvif)
   }, [])
   const formats: OutFormat[] = ['jpeg', 'png', 'webp', ...(avif ? (['avif'] as const) : [])]
-  const lossy = isLossy(edit.format)
 
   return (
-    <div className="flex flex-col gap-2">
-      <label className="flex items-center gap-2 text-sm">
-        <span className="w-14 flex-none text-[var(--muted)]">Format</span>
-        <select
-          className="input-sm"
-          value={edit.format}
-          onChange={(e) => onChange({ format: e.target.value as OutFormat })}
-        >
-          {formats.map((f) => (
-            <option key={f} value={f}>
-              {LABEL[f]}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex items-center gap-2 text-sm">
-        <span className="w-14 flex-none text-[var(--muted)]">Quality</span>
-        <input
-          type="range"
-          min={1}
-          max={100}
-          value={edit.quality}
-          disabled={!lossy}
-          aria-label="Quality"
-          className="min-w-0 flex-1"
-          onChange={(e) => onChange({ quality: Number(e.target.value) })}
-        />
-        <span className="w-10 text-right tabular-nums">{lossy ? `${edit.quality}%` : 'n/a'}</span>
-      </label>
-      {!lossy && (
-        <p className="text-xs text-[var(--muted)]">
-          PNG is lossless, so quality does not apply. To shrink it, resize, set a size limit, or
-          switch to WebP or JPEG.
-        </p>
-      )}
-      {edit.format === 'jpeg' && (
-        <p className="text-xs text-[var(--muted)]">
-          JPEG has no transparency: it is filled with white.
-        </p>
+    <div className="flex flex-col gap-3">
+      <fieldset className="m-0 grid grid-cols-3 gap-1.5 border-0 p-0">
+        <legend className="sr-only">File type</legend>
+        {formats.map((f) => (
+          <label
+            key={f}
+            className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border px-1 py-2 text-center ${
+              edit.format === f
+                ? 'border-[var(--accent)] text-[var(--accent)]'
+                : 'border-[var(--border)]'
+            }`}
+          >
+            <input
+              type="radio"
+              name="format"
+              value={f}
+              checked={edit.format === f}
+              onChange={() => onChange({ format: f })}
+              className="sr-only"
+            />
+            <span className="text-sm font-semibold">{LABEL[f]}</span>
+            <span className="text-[11px] leading-tight text-[var(--muted)]">{FOR[f]}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      {isLossy(edit.format) && (
+        <label className="flex flex-col gap-1">
+          <span className="flex justify-between text-xs text-[var(--muted)]">
+            <span>Smaller file</span>
+            <span className="tabular-nums">Quality {edit.quality}%</span>
+            <span>Better</span>
+          </span>
+          <input
+            type="range"
+            min={1}
+            max={100}
+            value={edit.quality}
+            aria-label="Quality"
+            className="w-full"
+            onChange={(e) => onChange({ quality: Number(e.target.value) })}
+          />
+        </label>
       )}
     </div>
   )

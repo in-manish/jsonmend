@@ -73,22 +73,24 @@ export function EditorControls(p: Props) {
       </Section>
 
       <Section
-        title="Format and quality"
+        title="Save as"
         summary={`${LABEL[edit.format]}${edit.format === 'png' ? '' : ` · ${edit.quality}%`}`}
       >
         <FormatControls edit={edit} onChange={p.onEdit} />
       </Section>
 
       <Section
-        title="File size limit"
+        title="File size"
         summary={
-          edit.target.on ? `≤ ${formatBytes(toBytes(edit.target.value, edit.target.unit))}` : 'Off'
+          edit.target.on
+            ? `Under ${formatBytes(toBytes(edit.target.value, edit.target.unit))}`
+            : 'No limit'
         }
       >
         <TargetSizeControls target={edit.target} onChange={p.onTarget} />
       </Section>
 
-      <Section title="Result details" summary={out ? formatBytes(out.blob.size) : '…'}>
+      <Section title="Info" summary={out ? formatBytes(out.blob.size) : '…'}>
         <ResultSummary img={img} dims={dims} edit={edit} state={state} />
       </Section>
     </>

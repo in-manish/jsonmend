@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { type MouseEvent, useEffect } from 'react'
 import { pathFor, ROUTES } from '../routes'
 import { type Tool, useAppStore } from '../store/useAppStore'
 import App from './App'
@@ -7,6 +7,7 @@ import { HtmlTool } from './html/HtmlTool'
 import { ImageTool } from './image/ImageTool'
 import { normalizeUrl, syncUrl, titleFor, toolFromLocation } from './navigation'
 import { PyIndentTool } from './pyindent/PyIndentTool'
+import { ToolMenu } from './ToolMenu'
 import { UrlTool } from './url/UrlTool'
 
 const LABELS: Record<Tool, string> = {
@@ -35,11 +36,20 @@ export function Shell() {
     document.title = titleFor(tool)
   }, [tool])
 
+  const pick = (e: MouseEvent<HTMLAnchorElement>, id: Tool) => {
+    // Let modified clicks (new tab, copy link) behave like normal links.
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+    e.preventDefault()
+    setTool(id)
+    syncUrl(id)
+  }
+
   return (
     <div className="flex h-dvh flex-col bg-[var(--bg)] text-[var(--fg)]">
+      <ToolMenu tools={TABS} current={tool} onPick={pick} />
       <nav
         aria-label="Tools"
-        className="flex gap-1 border-b border-[var(--border)] bg-[var(--panel)] px-3 pt-1.5"
+        className="hidden gap-1 border-b border-[var(--border)] bg-[var(--panel)] px-3 pt-1.5 md:flex"
       >
         {TABS.map((t) => (
           <a
@@ -47,13 +57,7 @@ export function Shell() {
             href={pathFor(t.id, import.meta.env.BASE_URL)}
             className="tool-tab"
             aria-current={tool === t.id ? 'page' : undefined}
-            onClick={(e) => {
-              // Let modified clicks (new tab, copy link) behave like normal links.
-              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
-              e.preventDefault()
-              setTool(t.id)
-              syncUrl(t.id)
-            }}
+            onClick={(e) => pick(e, t.id)}
           >
             {t.label}
           </a>

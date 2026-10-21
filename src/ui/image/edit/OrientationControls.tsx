@@ -33,8 +33,8 @@ export function OrientationControls({ orient, onChange }: Props) {
   const buttons: { label: string; icon: string; next(o: Orientation): Orientation }[] = [
     { label: 'Rotate left', icon: 'M5 2 2 5l3 3M2 5h7a5 5 0 1 1-5 5', next: rotateLeft },
     { label: 'Rotate right', icon: 'M11 2l3 3-3 3M14 5H7a5 5 0 1 0 5 5', next: rotateRight },
-    { label: 'Flip horizontal', icon: 'M8 1v14M5 4 1 8l4 4zM11 4l4 4-4 4z', next: flipHorizontal },
-    { label: 'Flip vertical', icon: 'M1 8h14M4 5l4-4 4 4zM4 11l4 4 4-4z', next: flipVertical },
+    { label: 'Mirror', icon: 'M8 1v14M5 4 1 8l4 4zM11 4l4 4-4 4z', next: flipHorizontal },
+    { label: 'Upside down', icon: 'M1 8h14M4 5l4-4 4 4zM4 11l4 4 4-4z', next: flipVertical },
   ]
   return (
     <div className="flex flex-col gap-2">
@@ -60,7 +60,7 @@ export function OrientationControls({ orient, onChange }: Props) {
         disabled={isIdentity(orient)}
         onClick={() => onChange(IDENTITY)}
       >
-        Reset orientation
+        Undo rotation
       </button>
     </div>
   )

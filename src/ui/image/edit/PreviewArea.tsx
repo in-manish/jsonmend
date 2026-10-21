@@ -23,20 +23,26 @@ function Frame({ c, zoom, onTap }: { c: Caption; zoom: 'fit' | 'actual'; onTap()
         {c.label} · tap the image to crop
       </figcaption>
       <div
-        className={`checkerboard min-h-0 flex-1 ${zoom === 'actual' ? 'overflow-auto' : 'flex items-center justify-center overflow-hidden'}`}
+        className={`checkerboard relative min-h-0 flex-1 ${zoom === 'actual' ? 'overflow-auto' : 'overflow-hidden'}`}
       >
         {c.url && (
           <button
             type="button"
             onClick={onTap}
             aria-label={`${c.alt}: tap to crop`}
-            className={`block border-0 bg-transparent p-0 ${zoom === 'fit' ? 'max-h-full max-w-full' : ''}`}
+            // Fit: the button is pinned to the frame's edges, so the picture shrinks to fit and is
+            // never cut off. Actual size: the button takes the picture's size and the frame scrolls.
+            className={`border-0 bg-transparent p-0 ${
+              zoom === 'fit' ? 'absolute inset-0 flex items-center justify-center p-2' : 'block'
+            }`}
             style={{ cursor: 'crosshair' }}
           >
             <img
               src={c.url}
               alt={c.alt}
-              className={zoom === 'fit' ? 'max-h-full max-w-full object-contain' : 'max-w-none'}
+              className={
+                zoom === 'fit' ? 'max-h-full max-w-full object-contain' : 'max-w-none max-h-none'
+              }
             />
           </button>
         )}

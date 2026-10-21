@@ -9,10 +9,21 @@ interface Props {
   /** Also accept files pasted from the clipboard (screenshots, copied images). */
   paste?: boolean
   compact?: boolean
+  /** One big solid button (phones), instead of a dashed drop area. */
+  primary?: boolean
 }
 
 /** Click, drag and drop, or paste files. Nothing is uploaded; files are read in the browser. */
-export function DropZone({ accept, multiple, label, hint, onFiles, paste, compact }: Props) {
+export function DropZone({
+  accept,
+  multiple,
+  label,
+  hint,
+  onFiles,
+  paste,
+  compact,
+  primary,
+}: Props) {
   const input = useRef<HTMLInputElement>(null)
   const [over, setOver] = useState(false)
 
@@ -41,12 +52,16 @@ export function DropZone({ accept, multiple, label, hint, onFiles, paste, compac
         const files = [...e.dataTransfer.files]
         if (files.length) onFiles(multiple ? files : files.slice(0, 1))
       }}
-      className={`flex w-full flex-col items-center justify-center gap-1 rounded border-2 border-dashed text-center ${
-        compact ? 'p-3' : 'p-8'
-      } ${over ? 'border-[var(--accent)] bg-[var(--panel)]' : 'border-[var(--border)]'} hover:border-[var(--accent)]`}
+      className={
+        primary
+          ? 'flex w-full flex-col items-center justify-center gap-1 rounded-2xl bg-[var(--accent)] px-6 py-6 text-center text-[var(--accent-fg)] shadow-md active:opacity-90'
+          : `flex w-full flex-col items-center justify-center gap-1 rounded border-2 border-dashed text-center ${
+              compact ? 'p-3' : 'p-8'
+            } ${over ? 'border-[var(--accent)] bg-[var(--panel)]' : 'border-[var(--border)]'} hover:border-[var(--accent)]`
+      }
     >
-      <span className="font-medium">{label}</span>
-      <span className="text-xs text-[var(--muted)]">{hint}</span>
+      <span className={primary ? 'text-xl font-semibold' : 'font-medium'}>{label}</span>
+      <span className={primary ? 'text-sm opacity-90' : 'text-xs text-[var(--muted)]'}>{hint}</span>
       <input
         ref={input}
         type="file"

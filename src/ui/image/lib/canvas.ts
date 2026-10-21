@@ -18,7 +18,7 @@ export const EXTENSION: Record<OutFormat, string> = {
   avif: 'avif',
 }
 export const LABEL: Record<OutFormat, string> = {
-  jpeg: 'JPEG',
+  jpeg: 'JPG',
   png: 'PNG',
   webp: 'WebP',
   avif: 'AVIF',
