@@ -15,6 +15,7 @@ import { HtmlToolbar } from './HtmlToolbar'
 import { IssueList } from './IssueList'
 import { FoldButton, MaximizeButton, Rail } from './PaneControls'
 import { PreviewPane } from './preview/PreviewPane'
+import { useHtmlFile } from './useHtmlFile'
 import { type HtmlView, useHtmlStore } from './useHtmlStore'
 
 const outputExtensions = [
@@ -27,6 +28,8 @@ const inputExtensions = [
   marksField,
   baseTheme,
   EditorView.contentAttributes.of({ 'aria-label': 'Input: paste HTML here' }),
+  // Dropped files replace the input (handled by the pane), instead of being typed in at the cursor.
+  EditorView.domEventHandlers({ drop: (e) => (e.dataTransfer?.files.length ?? 0) > 0 }),
 ]
 const VIEWS: { id: HtmlView; label: string }[] = [
   { id: 'code', label: 'Formatted' },
@@ -81,6 +84,7 @@ export function HtmlTool() {
     setInput(applyEdits(input, fixes))
     notify(`Applied ${fixes.length} fix${fixes.length === 1 ? '' : 'es'} to the input`)
   }
+  const file = useHtmlFile(setInput)
   const paste = async () => {
     const text = await pasteText()
     if (text === undefined) return notify('Clipboard is not available')
@@ -101,11 +105,15 @@ export function HtmlTool() {
           hasInput={input !== ''}
           hasOutput={!empty}
           onOptions={setOptions}
+          onOpen={file.open}
           onPaste={paste}
-          onClear={() => setInput('')}
+          onClear={() => {
+            setInput('')
+            file.forget()
+          }}
           onUseFormatted={() => setInput(current())}
           onCopy={copy}
-          onDownload={() => download(current(), 'formatted.html', 'text/html')}
+          onDownload={() => download(current(), file.downloadName, 'text/html')}
           onSample={setInput}
         />
       </div>
@@ -117,10 +125,17 @@ export function HtmlTool() {
           {inputFolded && <Rail pane="input" onClick={() => toggleCollapsed('input')} />}
           <section
             aria-label="HTML input"
-            className={`min-h-0 min-w-0 flex-1 flex-col ${inputFolded ? 'hidden' : 'flex'}`}
+            className={`min-h-0 min-w-0 flex-1 flex-col ${inputFolded ? 'hidden' : 'flex'} ${
+              file.dragging
+                ? 'outline-2 -outline-offset-2 outline-dashed outline-[var(--accent)]'
+                : ''
+            }`}
+            {...file.dropProps}
           >
             <div className="flex items-center justify-between pr-2">
-              <h2 className="pane-title">Input</h2>
+              <h2 className="pane-title truncate" title={file.fileName}>
+                Input{file.fileName ? ` · ${file.fileName}` : ''}
+              </h2>
               <div className="flex items-center gap-1">
                 <CopyAllButton label="Copy all input" getText={() => input} />
                 <FoldButton pane="input" onClick={() => toggleCollapsed('input')} />
@@ -134,7 +149,7 @@ export function HtmlTool() {
                 theme={dark ? 'dark' : 'light'}
                 extensions={inputExtensions}
                 onChange={setInput}
-                placeholder="Paste HTML or a Django / Jinja template here..."
+                placeholder="Paste HTML or a Django / Jinja template, or open / drop a .html file..."
                 onCreateEditor={(v) => {
                   inputView.current = v
                 }}

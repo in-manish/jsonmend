@@ -1,11 +1,14 @@
+import { useRef } from 'react'
 import type { HtmlOptions } from '../../core/html/format'
 import { HTML_SAMPLES } from './samples'
+import { HTML_ACCEPT } from './useHtmlFile'
 
 interface Props {
   options: HtmlOptions
   hasInput: boolean
   hasOutput: boolean
   onOptions(patch: Partial<HtmlOptions>): void
+  onOpen(files: FileList | null): void
   onPaste(): void
   onClear(): void
   onUseFormatted(): void
@@ -16,6 +19,7 @@ interface Props {
 
 export function HtmlToolbar(p: Props) {
   const { options } = p
+  const fileInput = useRef<HTMLInputElement>(null)
   return (
     <header className="flex items-center gap-1.5 overflow-x-auto border-b border-[var(--border)] bg-[var(--panel)] px-3 py-2 md:flex-wrap [&>*]:shrink-0">
       <label className="flex items-center gap-1 text-sm">
@@ -66,6 +70,25 @@ export function HtmlToolbar(p: Props) {
           <option value="off">Off</option>
         </select>
       </label>
+      <button
+        type="button"
+        className="btn"
+        onClick={() => fileInput.current?.click()}
+        title="Choose an .html file (or a Django / Jinja template) from your device, or drop one on the input"
+      >
+        Open file…
+      </button>
+      <input
+        ref={fileInput}
+        type="file"
+        accept={HTML_ACCEPT}
+        hidden
+        data-testid="html-file-input"
+        onChange={(e) => {
+          p.onOpen(e.target.files)
+          e.target.value = ''
+        }}
+      />
       <button type="button" className="btn" onClick={p.onPaste}>
         Paste
       </button>
