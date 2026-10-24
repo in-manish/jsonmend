@@ -32,6 +32,8 @@ interface AppState {
   theme: Theme
   orientation: Orientation
   tool: Tool
+  /** Which option of the tool the address bar names (e.g. 'batch', 'form:ibps'); not saved. */
+  option?: string
   /** Panes folded into a slim rail; at most one at a time. */
   collapsed: Record<Pane, boolean>
   reportOpen: boolean
@@ -54,6 +56,7 @@ interface AppState {
   setTheme(theme: Theme): void
   setOrientation(orientation: Orientation): void
   toggleCollapsed(pane: Pane): void
+  /** Switching tool forgets the option; the same tool keeps it. */
   setTool(tool: Tool): void
   setReportOpen(open: boolean): void
   setOptionsOpen(open: boolean): void
@@ -92,7 +95,7 @@ export const useAppStore = create<AppState>()(
       setView: (view) => set({ view }),
       setTheme: (theme) => set({ theme }),
       setOrientation: (orientation) => set({ orientation }),
-      setTool: (tool) => set({ tool }),
+      setTool: (tool) => set((s) => ({ tool, option: tool === s.tool ? s.option : undefined })),
       // Collapsing one pane expands the other, so a pane is always visible.
       toggleCollapsed: (pane) =>
         set((s) => ({

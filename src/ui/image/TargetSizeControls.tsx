@@ -10,6 +10,8 @@ interface Props {
   what?: string
   /** Size of the original file, for "25% / 50% / 75% smaller"; omitted, those are not offered. */
   originalBytes?: number
+  /** Offer "No limit"; off when a limit is the whole point. */
+  allowOff?: boolean
 }
 
 const PERCENTS = [25, 50, 75]
@@ -27,7 +29,13 @@ const LIMITS: { value: number; unit: SizeUnit }[] = [
 const text = (l: { value: number; unit: SizeUnit }) => `${l.value} ${l.unit.toUpperCase()}`
 
 /** "Keep under": one tap for the usual upload limits, or a custom number in KB (default) / MB. */
-export function TargetSizeControls({ target, onChange, what = 'photo', originalBytes }: Props) {
+export function TargetSizeControls({
+  target,
+  onChange,
+  what = 'photo',
+  originalBytes,
+  allowOff = true,
+}: Props) {
   const matches = (l: { value: number; unit: SizeUnit }) =>
     target.on && target.value === l.value && target.unit === l.unit
   const percent = (p: number) =>
@@ -45,17 +53,19 @@ export function TargetSizeControls({ target, onChange, what = 'photo', originalB
   return (
     <div className="flex flex-col gap-2">
       <fieldset className="m-0 flex flex-wrap gap-1.5 border-0 p-0" aria-label="Keep under">
-        <button
-          type="button"
-          className="btn crop-chip"
-          aria-pressed={!target.on}
-          onClick={() => {
-            setCustom(false)
-            onChange({ on: false })
-          }}
-        >
-          No limit
-        </button>
+        {allowOff && (
+          <button
+            type="button"
+            className="btn crop-chip"
+            aria-pressed={!target.on}
+            onClick={() => {
+              setCustom(false)
+              onChange({ on: false })
+            }}
+          >
+            No limit
+          </button>
+        )}
         {LIMITS.map((l) => (
           <button
             key={text(l)}

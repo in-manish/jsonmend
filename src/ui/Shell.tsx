@@ -1,11 +1,11 @@
 import { type MouseEvent, useEffect } from 'react'
-import { pathFor, ROUTES } from '../routes'
+import { pathFor, TOOL_ROUTES } from '../routes'
 import { type Tool, useAppStore } from '../store/useAppStore'
 import App from './App'
 import { useTheme } from './hooks/useTheme'
 import { HtmlTool } from './html/HtmlTool'
 import { ImageTool } from './image/ImageTool'
-import { normalizeUrl, syncUrl, titleFor, toolFromLocation } from './navigation'
+import { applyLocationToStore, normalizeUrl, syncUrl, titleFor } from './navigation'
 import { PyIndentTool } from './pyindent/PyIndentTool'
 import { ToolMenu } from './ToolMenu'
 import { UrlTool } from './url/UrlTool'
@@ -17,24 +17,24 @@ const LABELS: Record<Tool, string> = {
   html: 'HTML formatter',
   image: 'Image tools',
 }
-const TABS = ROUTES.map((r) => ({ id: r.tool, label: LABELS[r.tool] }))
+const TABS = TOOL_ROUTES.map((r) => ({ id: r.tool, label: LABELS[r.tool] }))
 
 /** Tab bar over the independent tools; each tool owns its whole screen below it. */
 export function Shell() {
   const tool = useAppStore((s) => s.tool)
+  const option = useAppStore((s) => s.option)
   const setTool = useAppStore((s) => s.setTool)
   useTheme()
 
   // Address bar <-> tool: canonical path on load, Back/Forward switch tools, title per tool.
   useEffect(() => {
-    normalizeUrl(useAppStore.getState().tool)
-    const onPop = () => useAppStore.getState().setTool(toolFromLocation())
-    window.addEventListener('popstate', onPop)
-    return () => window.removeEventListener('popstate', onPop)
+    normalizeUrl()
+    window.addEventListener('popstate', applyLocationToStore)
+    return () => window.removeEventListener('popstate', applyLocationToStore)
   }, [])
   useEffect(() => {
-    document.title = titleFor(tool)
-  }, [tool])
+    document.title = titleFor(tool, option)
+  }, [tool, option])
 
   const pick = (e: MouseEvent<HTMLAnchorElement>, id: Tool) => {
     // Let modified clicks (new tab, copy link) behave like normal links.

@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import type { Rect } from '../../../core/image/crop'
 import type { Dim } from '../../../core/image/dims'
 import { scaleDim } from '../../../core/image/dims'
-import { setJpegDpi, setPngDpi } from '../../../core/image/dpi'
 import { Cancelled, fitToTarget } from '../../../core/image/fitToTarget'
 import type { Orientation } from '../../../core/image/orient'
 import { toBytes } from '../../../core/image/size'
-import { draw, encode, isLossy, type Loaded, MIME } from '../lib/canvas'
+import { isLossy, type Loaded } from '../lib/canvas'
+import { encodeImage } from '../lib/encodeImage'
 import type { ImagePrefs } from '../useImageStore'
 
 export interface EncodeOut {
@@ -65,18 +65,11 @@ export function useEncode(
         cx === undefined ? undefined : { x: cx, y: cy as number, w: cw as number, h: ch as number }
       const orientation =
         turns === undefined ? undefined : { turns, flipH: !!flipH, flipV: !!flipV }
-      let blob = await encode(
-        draw(img.source, d.width, d.height, format === 'jpeg', region, orientation),
-        MIME[format],
-        q,
-      )
-      if (blob.type !== MIME[format])
-        throw new Error(`This browser cannot encode ${format.toUpperCase()}`)
-      if (dpi && (format === 'jpeg' || format === 'png')) {
-        const bytes = new Uint8Array(await blob.arrayBuffer())
-        const tagged = format === 'jpeg' ? setJpegDpi(bytes, dpi) : setPngDpi(bytes, dpi)
-        blob = new Blob([tagged as BlobPart], { type: MIME[format] })
-      }
+      const blob = await encodeImage(img.source, d, format, q, {
+        dpi,
+        crop: region,
+        orient: orientation,
+      })
       return { size: blob.size, blob, width: d.width, height: d.height }
     }
 

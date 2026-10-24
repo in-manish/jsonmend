@@ -1,10 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { isLossy, LABEL, type OutFormat, supportsAvif } from '../lib/canvas'
-import type { ImagePrefs } from '../useImageStore'
+
+interface Settings {
+  format: OutFormat
+  quality: number
+}
 
 interface Props {
-  edit: ImagePrefs['edit']
-  onChange(patch: Partial<ImagePrefs['edit']>): void
+  edit: Settings
+  onChange(patch: Partial<Settings>): void
+  /** Show the quality slider (and the PNG note); off when only the file type matters. */
+  quality?: boolean
 }
 
 /** What each file type is for, in two words. */
@@ -16,7 +22,9 @@ const FOR: Record<OutFormat, string> = {
 }
 
 /** "Save as": file type, then one quality slider. */
-export function FormatControls({ edit, onChange }: Props) {
+export function FormatControls({ edit, onChange, quality = true }: Props) {
+  // Each editor keeps its own radio group; they stay mounted side by side.
+  const group = useId()
   const [avif, setAvif] = useState(false)
   useEffect(() => {
     supportsAvif().then(setAvif)
@@ -38,7 +46,7 @@ export function FormatControls({ edit, onChange }: Props) {
           >
             <input
               type="radio"
-              name="format"
+              name={group}
               value={f}
               checked={edit.format === f}
               onChange={() => onChange({ format: f })}
@@ -50,12 +58,12 @@ export function FormatControls({ edit, onChange }: Props) {
         ))}
       </fieldset>
 
-      {!isLossy(edit.format) && (
+      {quality && !isLossy(edit.format) && (
         <p className="text-xs text-[var(--muted)]">
           PNG has no quality setting. To compress, use File size or pick JPG / WebP.
         </p>
       )}
-      {isLossy(edit.format) && (
+      {quality && isLossy(edit.format) && (
         <label className="flex flex-col gap-1">
           <span className="flex justify-between text-xs text-[var(--muted)]">
             <span>Smaller file</span>

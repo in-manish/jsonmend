@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { formatBytes } from '../../../core/image/size'
+import { openOption } from '../../navigation'
 import { typeLabel } from '../lib/canvas'
 import { TargetSizeControls } from '../TargetSizeControls'
 import { ActionBar } from './ActionBar'
@@ -79,6 +80,9 @@ export function PhoneEditor({ s }: { s: EditorSession }) {
             Remove crop ({s.crop.w}×{s.crop.h})
           </button>
         )}
+        <button type="button" className="btn" onClick={() => openOption('image', 'form')}>
+          Fit to a form (IBPS, NEET, UPSC, passport)
+        </button>
         <button type="button" className="btn" onClick={s.close}>
           Choose another image
         </button>

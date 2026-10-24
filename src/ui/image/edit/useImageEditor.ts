@@ -22,6 +22,8 @@ import { type EncodeState, useEncode } from './useEncode'
 
 /** Everything both editor layouts (phone and desktop) need about the open image. */
 export interface EditorSession {
+  /** The file that was opened. */
+  file: File
   img: Loaded
   dims: Dim
   /** Size the resize fields are relative to: the cropped and turned picture. */
@@ -119,6 +121,7 @@ export function useImageEditor() {
   }
 
   const session: EditorSession = {
+    file: opened.file,
     img,
     dims,
     base: orientedDim(kept, orient),

@@ -342,20 +342,17 @@ body {
     gap: 0;
   }
   .mode-tabs .btn {
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 1 0 auto;
     min-height: 2.5rem;
-    padding-inline: 0.25rem;
+    padding-inline: 0.5rem;
     border-radius: 0;
     font-size: 0.8125rem;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
   .mode-tabs .btn:first-child {
     border-radius: 9999px 0 0 9999px;
   }
-  .mode-tabs .btn:nth-child(3) {
+  .mode-tabs .btn:last-of-type {
     border-radius: 0 9999px 9999px 0;
   }
   .mode-tabs .btn + .btn {

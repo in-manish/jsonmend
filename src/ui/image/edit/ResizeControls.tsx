@@ -13,7 +13,7 @@ import { NumField } from '../NumField'
 import type { ResizeUnit } from '../useImageStore'
 
 const WIDTHS = [1920, 1280, 800]
-const DPIS = [
+export const DPIS = [
   { dpi: 0, label: 'Not set' },
   { dpi: 72, label: '72 (web)' },
   { dpi: 96, label: '96 (screen)' },

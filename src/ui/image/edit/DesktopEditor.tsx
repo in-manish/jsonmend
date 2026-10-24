@@ -1,4 +1,5 @@
 import { formatBytes } from '../../../core/image/size'
+import { openOption } from '../../navigation'
 import { typeLabel } from '../lib/canvas'
 import { ActionBar } from './ActionBar'
 import { EditorControls } from './EditorControls'
@@ -28,6 +29,9 @@ export function DesktopEditor({ s }: { s: EditorSession }) {
               Change
             </button>
           </div>
+          <button type="button" className="btn w-full" onClick={() => openOption('image', 'form')}>
+            Fit to a form (IBPS, NEET, UPSC, passport)
+          </button>
           <EditorControls
             img={img}
             dims={s.dims}

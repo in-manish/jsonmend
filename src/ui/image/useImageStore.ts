@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { BatchSizeMode } from '../../core/image/batch'
 import type { PhysicalUnit } from '../../core/image/dims'
 import type { PageSize } from '../../core/image/pdfWriter'
 import type { SizeUnit } from '../../core/image/size'
@@ -9,7 +10,7 @@ import type { OutFormat } from './lib/canvas'
 /** How the resize fields are expressed. */
 export type ResizeUnit = 'px' | 'percent' | PhysicalUnit
 
-export type ImageMode = 'edit' | 'pdf-to-images' | 'images-to-pdf'
+export type ImageMode = 'edit' | 'batch' | 'pdf-to-images' | 'images-to-pdf'
 
 export interface TargetPrefs {
   on: boolean
@@ -20,7 +21,6 @@ export interface TargetPrefs {
 }
 
 export interface ImagePrefs {
-  mode: ImageMode
   edit: {
     format: OutFormat
     /** 1-100. */
@@ -31,6 +31,19 @@ export interface ImagePrefs {
      * Print resolution (dots per inch), written into JPG / PNG files and used for inches / cm.
      * 0 = not set: files keep the browser's default and inches / cm assume 300.
      */
+    dpi: number
+    target: TargetPrefs
+  }
+  /** One set of settings for many photos. */
+  batch: {
+    /** What the person wants to do; picks the settings below (see batch/goals.ts). */
+    goal: 'share' | 'upload' | 'space' | 'convert' | 'custom'
+    format: OutFormat
+    quality: number
+    sizeMode: BatchSizeMode
+    /** Percent, or pixels of the longer side; unused for 'original'. */
+    sizeValue: number
+    /** Print resolution written into JPG / PNG files; 0 = not set. */
     dpi: number
     target: TargetPrefs
   }
@@ -47,12 +60,20 @@ export interface ImagePrefs {
 const target: TargetPrefs = { on: false, value: 200, unit: 'kb', allowScale: true }
 
 export const DEFAULT_PREFS: ImagePrefs = {
-  mode: 'edit',
   edit: {
     format: 'jpeg',
     quality: 80,
     lockRatio: true,
     unit: 'px',
+    dpi: 0,
+    target: { ...target },
+  },
+  batch: {
+    goal: 'share',
+    format: 'jpeg',
+    quality: 80,
+    sizeMode: 'longest',
+    sizeValue: 1600,
     dpi: 0,
     target: { ...target },
   },
@@ -62,9 +83,10 @@ export const DEFAULT_PREFS: ImagePrefs = {
 
 interface ImageState {
   prefs: ImagePrefs
-  setMode(mode: ImageMode): void
   setEdit(patch: Partial<ImagePrefs['edit']>): void
   setEditTarget(patch: Partial<TargetPrefs>): void
+  setBatch(patch: Partial<Omit<ImagePrefs['batch'], 'target'>>): void
+  setBatchTarget(patch: Partial<TargetPrefs>): void
   setPdfToImages(patch: Partial<ImagePrefs['pdfToImages']>): void
   setImagesToPdf(patch: Partial<Omit<ImagePrefs['imagesToPdf'], 'target'>>): void
   setPdfTarget(patch: Partial<TargetPrefs>): void
@@ -77,11 +99,15 @@ const saved = loadSaved<Saved>(KEY)
 /** Only preferences persist; image and PDF files are never stored. */
 export const useImageStore = create<ImageState>((set) => ({
   prefs: {
-    mode: saved.mode ?? DEFAULT_PREFS.mode,
     edit: {
       ...DEFAULT_PREFS.edit,
       ...saved.edit,
       target: { ...DEFAULT_PREFS.edit.target, ...saved.edit?.target },
+    },
+    batch: {
+      ...DEFAULT_PREFS.batch,
+      ...saved.batch,
+      target: { ...DEFAULT_PREFS.batch.target, ...saved.batch?.target },
     },
     pdfToImages: { ...DEFAULT_PREFS.pdfToImages, ...saved.pdfToImages },
     imagesToPdf: {
@@ -90,13 +116,21 @@ export const useImageStore = create<ImageState>((set) => ({
       target: { ...DEFAULT_PREFS.imagesToPdf.target, ...saved.imagesToPdf?.target },
     },
   },
-  setMode: (mode) => set((s) => ({ prefs: { ...s.prefs, mode } })),
   setEdit: (patch) => set((s) => ({ prefs: { ...s.prefs, edit: { ...s.prefs.edit, ...patch } } })),
   setEditTarget: (patch) =>
     set((s) => ({
       prefs: {
         ...s.prefs,
         edit: { ...s.prefs.edit, target: { ...s.prefs.edit.target, ...patch } },
+      },
+    })),
+  setBatch: (patch) =>
+    set((s) => ({ prefs: { ...s.prefs, batch: { ...s.prefs.batch, ...patch } } })),
+  setBatchTarget: (patch) =>
+    set((s) => ({
+      prefs: {
+        ...s.prefs,
+        batch: { ...s.prefs.batch, target: { ...s.prefs.batch.target, ...patch } },
       },
     })),
   setPdfToImages: (patch) =>

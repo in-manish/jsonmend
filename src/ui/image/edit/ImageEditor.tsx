@@ -1,4 +1,8 @@
+import { parseFormOption } from '../../../core/image/formPresets'
+import { useAppStore } from '../../../store/useAppStore'
+import { openOption } from '../../navigation'
 import { DropZone } from '../DropZone'
+import { FormPhoto } from '../form/FormPhoto'
 import { useIsPhone } from '../lib/useIsPhone'
 import { DesktopEditor } from './DesktopEditor'
 import { PhoneEditor } from './PhoneEditor'
@@ -11,7 +15,12 @@ import { useImageEditor } from './useImageEditor'
 export function ImageEditor() {
   const { open, session } = useImageEditor()
   const phone = useIsPhone()
+  // "Photo for a form" is an option of the tool with its own address (/photo-for/...).
+  const forForm = parseFormOption(useAppStore((s) => s.option)) !== undefined
 
+  if (forForm) {
+    return <FormPhoto initialFile={session?.file} onBack={() => openOption('image')} />
+  }
   if (!session) {
     return (
       <div className="image-tool flex h-full items-center justify-center p-4">
@@ -43,6 +52,13 @@ export function ImageEditor() {
               </li>
             ))}
           </ul>
+          <button
+            type="button"
+            className="btn mt-5 w-full"
+            onClick={() => openOption('image', 'form')}
+          >
+            Need a photo for a form? (IBPS, NEET, UPSC, passport)
+          </button>
         </div>
       </div>
     )
